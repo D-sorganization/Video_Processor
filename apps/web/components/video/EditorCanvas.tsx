@@ -72,6 +72,10 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, EditorCanvasProps>(
 
       fabricCanvasRef.current = canvas;
 
+      if (onAnnotationChange) {
+        onAnnotationChange(canvas.getObjects());
+      }
+
       const resizeCanvas = () => {
         if (!videoElement || !canvas) return;
         const container = canvas.getElement().parentElement;
