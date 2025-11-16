@@ -43,7 +43,8 @@ export default function HomePage() {
 
   const handleVideoUpload = (file: File) => {
     try {
-      // Basic validation (detailed validation should be in VideoUploader component)
+      // Note: File validation is performed by VideoUploader component
+      // before this handler is called (quickValidateVideoFile)
       if (!file) {
         throw new VideoProcessingError('No file provided');
       }

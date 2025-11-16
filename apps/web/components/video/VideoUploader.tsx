@@ -1,48 +1,39 @@
 'use client';
 
 import { ChangeEvent, DragEvent, useRef, useState } from 'react';
+import { quickValidateVideoFile, MAX_FILE_SIZE } from '@/lib/validation/video';
+import { ValidationError } from '@/lib/errors';
 
 interface VideoUploaderProps {
   onVideoUpload: (file: File) => void;
 }
 
-const MAX_FILE_SIZE_MB = 500;
-const ALLOWED_VIDEO_TYPES = [
-  'video/mp4',
-  'video/webm',
-  'video/ogg',
-  'video/quicktime',
-  'video/x-msvideo',
-  'video/x-matroska',
-];
+const MAX_FILE_SIZE_MB = MAX_FILE_SIZE / (1024 * 1024);
 
 export default function VideoUploader({ onVideoUpload }: VideoUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const validateFile = (file: File): string | null => {
-    if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
-      return `File type not supported. Allowed types: MP4, WebM, OGG, MOV, AVI, MKV`;
-    }
-
-    const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB > MAX_FILE_SIZE_MB) {
-      return `File size too large. Maximum size: ${MAX_FILE_SIZE_MB}MB`;
-    }
-
-    return null;
-  };
-
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     setError(null);
-    const validationError = validateFile(file);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
 
-    onVideoUpload(file);
+    try {
+      // Use comprehensive validation with proper error handling
+      quickValidateVideoFile(file);
+
+      // If validation passes, notify parent component
+      onVideoUpload(file);
+    } catch (err) {
+      // Display user-friendly error message
+      if (err instanceof ValidationError) {
+        setError(err.getUserMessage());
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Invalid video file. Please try another file.');
+      }
+    }
   };
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
