@@ -8,6 +8,7 @@
 import '@testing-library/jest-dom';
 import { expect, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import React from 'react';
 
 // Cleanup after each test
 afterEach(() => {
@@ -31,10 +32,7 @@ vi.mock('next/navigation', () => ({
 
 // Mock Next.js image component
 vi.mock('next/image', () => ({
-  default: (props: any) => {
-    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-    return <img {...props} />;
-  },
+  default: (props: any) => React.createElement('img', props),
 }));
 
 // Mock window.matchMedia
