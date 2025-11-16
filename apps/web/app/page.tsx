@@ -10,8 +10,11 @@ import VideoEditor from '@/components/video/VideoEditor';
 import VideoPlayer from '@/components/video/VideoPlayer';
 import VideoUploader from '@/components/video/VideoUploader';
 import { useVideoFrame } from '@/hooks/useVideoFrame';
+import { logger } from '@/lib/logger';
+import { AudioRecordingError, VideoProcessingError, getUserMessage } from '@/lib/errors';
 import { fabric } from 'fabric';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function HomePage() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -29,15 +32,37 @@ export default function HomePage() {
   const canvasRef = useRef<EditorCanvasHandle>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Note: config is not imported here to avoid client-side issues
+  // TODO: Move fps to client-side config or use from video metadata
+  const DEFAULT_FPS = 30; // Could be from process.env.NEXT_PUBLIC_DEFAULT_VIDEO_FPS
+
   const { getCurrentFrame, getTotalFrames } = useVideoFrame({
     videoElement,
-    fps: 30,
+    fps: DEFAULT_FPS,
   });
 
   const handleVideoUpload = (file: File) => {
-    setVideoFile(file);
-    const url = URL.createObjectURL(file);
-    setVideoUrl(url);
+    try {
+      // Basic validation (detailed validation should be in VideoUploader component)
+      if (!file) {
+        throw new VideoProcessingError('No file provided');
+      }
+
+      setVideoFile(file);
+      const url = URL.createObjectURL(file);
+      setVideoUrl(url);
+
+      logger.info('Video uploaded successfully', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+      });
+
+      toast.success(`Video loaded: ${file.name}`);
+    } catch (error) {
+      logger.error('Failed to upload video', { error, file });
+      toast.error(getUserMessage(error));
+    }
   };
 
   const handleClearVideo = () => {
@@ -73,23 +98,80 @@ export default function HomePage() {
   };
 
   const handleAudioRecorded = (audioBlob: Blob, startTime: number) => {
-    const audioUrl = URL.createObjectURL(audioBlob);
-    console.log('Audio recorded:', { audioUrl, startTime, duration: audioBlob.size });
+    try {
+      // Validate input
+      if (!audioBlob || audioBlob.size === 0) {
+        throw new AudioRecordingError('Empty audio blob received', {
+          startTime,
+          blobSize: audioBlob?.size,
+        });
+      }
+
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      logger.info('Audio recorded successfully', {
+        audioUrl,
+        startTime,
+        duration: audioBlob.size,
+        videoId: videoFile?.name,
+      });
+
+      toast.success('Audio commentary recorded successfully');
+
+      // TODO: Save to database when backend is ready
+      // await saveAudioTrack({ url: audioUrl, startTime, duration: audioBlob.size });
+    } catch (error) {
+      logger.error('Failed to process audio recording', { error, audioBlob, startTime });
+      toast.error(getUserMessage(error));
+    }
   };
 
   const handleVideoExport = (blob: Blob) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `edited-${videoFile?.name || 'video.mp4'}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      // Validate input
+      if (!blob || blob.size === 0) {
+        throw new VideoProcessingError('Empty video blob received', {
+          blobSize: blob?.size,
+        });
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `edited-${videoFile?.name || 'video.mp4'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      logger.info('Video exported successfully', {
+        fileName: a.download,
+        fileSize: blob.size,
+      });
+
+      toast.success(`Video exported: ${a.download}`);
+    } catch (error) {
+      logger.error('Failed to export video', { error, blob });
+      toast.error(getUserMessage(error));
+    }
   };
 
   const handlePoseDetected = (landmarks: unknown) => {
-    console.log('Pose detected:', landmarks);
+    try {
+      logger.debug('Pose detected', {
+        landmarks,
+        videoId: videoFile?.name,
+        currentTime,
+        currentFrame,
+      });
+
+      // TODO: Save pose data to state or database when ready
+      // For now, just log for debugging
+    } catch (error) {
+      logger.error('Failed to process pose detection', { error, landmarks });
+      // Don't show toast for pose detection errors (they're continuous)
+      // toast.error(getUserMessage(error));
+    }
   };
 
   useEffect(() => {
