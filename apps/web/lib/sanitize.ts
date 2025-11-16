@@ -97,15 +97,25 @@ export function sanitizeHTML(html: string): string {
 /**
  * Escape HTML special characters
  * Useful for displaying user input in HTML context
+ * Uses OWASP-recommended character entity encoding
+ * Source: https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
  */
 export function escapeHTML(text: string): string {
-  if (!text) {
+  if (typeof text !== 'string' || !text) {
     return '';
   }
 
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  // OWASP recommended HTML entity encoding
+  const ESCAPE_MAP: { [char: string]: string } = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;', // &apos; is not recommended by OWASP
+    '/': '&#x2F;', // Prevents closing script tags
+  };
+
+  return text.replace(/[&<>"'/]/g, (char) => ESCAPE_MAP[char]);
 }
 
 /**

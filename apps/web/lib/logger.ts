@@ -2,13 +2,12 @@
  * Application Logger
  *
  * Structured logging with support for different log levels and metadata.
+ * Works in both server and client environments.
  * Uses pino for high-performance logging in production.
  *
  * For now, uses console with structured formatting.
  * TODO: Add pino when ready for production.
  */
-
-import { config } from './config';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -16,11 +15,30 @@ interface LogMetadata {
   [key: string]: unknown;
 }
 
+/**
+ * Get log level from environment variables
+ * Client-safe: Uses NEXT_PUBLIC_LOG_LEVEL for client, falls back to LOG_LEVEL for server
+ */
+function getLogLevel(): LogLevel {
+  // Check if we're on the client (browser)
+  const isClient = typeof window !== 'undefined';
+
+  if (isClient) {
+    // Client: Use NEXT_PUBLIC_LOG_LEVEL (safe to expose to browser)
+    const level = process.env.NEXT_PUBLIC_LOG_LEVEL || 'info';
+    return level as LogLevel;
+  } else {
+    // Server: Can access all env vars, try both public and private
+    const level = process.env.LOG_LEVEL || process.env.NEXT_PUBLIC_LOG_LEVEL || 'info';
+    return level as LogLevel;
+  }
+}
+
 class Logger {
   private minLevel: LogLevel;
 
   constructor() {
-    this.minLevel = config.monitoring.logLevel;
+    this.minLevel = getLogLevel();
   }
 
   private shouldLog(level: LogLevel): boolean {
@@ -113,7 +131,8 @@ class Logger {
     this.log('error', message, metadata);
 
     // Send to error tracking service if configured
-    if (config.monitoring.sentry.dsn && typeof window !== 'undefined') {
+    const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+    if (sentryDsn && typeof window !== 'undefined') {
       try {
         if ((window as any).Sentry) {
           (window as any).Sentry.captureMessage(message, {

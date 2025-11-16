@@ -16,14 +16,22 @@ afterEach(() => {
 });
 
 // Mock Next.js router
+// Create mock functions outside factory to ensure they're reused across multiple hook calls
+const mockPush = vi.fn();
+const mockReplace = vi.fn();
+const mockPrefetch = vi.fn();
+const mockBack = vi.fn();
+const mockForward = vi.fn();
+const mockRefresh = vi.fn();
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    prefetch: vi.fn(),
-    back: vi.fn(),
-    forward: vi.fn(),
-    refresh: vi.fn(),
+    push: mockPush,
+    replace: mockReplace,
+    prefetch: mockPrefetch,
+    back: mockBack,
+    forward: mockForward,
+    refresh: mockRefresh,
   }),
   usePathname: () => '/',
   useSearchParams: () => new URLSearchParams(),

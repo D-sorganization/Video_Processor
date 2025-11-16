@@ -36,10 +36,13 @@ const ALLOWED_MIME_TYPES = [
 // These are the first few bytes of each video format
 const MAGIC_BYTES: Record<string, Uint8Array[]> = {
   'video/mp4': [
-    // MP4 files start with ftyp box
-    new Uint8Array([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70]),
-    new Uint8Array([0x00, 0x00, 0x00, 0x1c, 0x66, 0x74, 0x79, 0x70]),
-    new Uint8Array([0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70]),
+    // MP4 files start with an 'ftyp' atom/box (0x66 0x74 0x79 0x70 = 'ftyp' in ASCII)
+    // The first 4 bytes represent the box size in big-endian format:
+    // 0x18 (24 bytes), 0x1c (28 bytes), 0x20 (32 bytes) are common ftyp box sizes
+    // Format: [size (4 bytes)][type (4 bytes 'ftyp')]
+    new Uint8Array([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70]), // 24-byte ftyp
+    new Uint8Array([0x00, 0x00, 0x00, 0x1c, 0x66, 0x74, 0x79, 0x70]), // 28-byte ftyp
+    new Uint8Array([0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70]), // 32-byte ftyp
   ],
   'video/webm': [
     // WebM files start with EBML header
@@ -177,11 +180,16 @@ async function validateVideoPlayability(file: File): Promise<void> {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
     const url = URL.createObjectURL(file);
+    let timeoutId: NodeJS.Timeout | null = null;
 
     video.preload = 'metadata';
     video.src = url;
 
     const cleanup = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
       URL.revokeObjectURL(url);
       video.remove();
     };
@@ -202,7 +210,7 @@ async function validateVideoPlayability(file: File): Promise<void> {
     };
 
     // Timeout after 10 seconds
-    setTimeout(() => {
+    timeoutId = setTimeout(() => {
       cleanup();
       reject(
         new ValidationError('Video validation timeout. The file may be corrupted or too large.', {
