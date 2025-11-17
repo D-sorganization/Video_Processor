@@ -67,10 +67,6 @@ describe('Rate Limiting', () => {
 
   describe('RateLimiter', () => {
     it('should allow requests under the limit', async () => {
-      const request = new Request('http://localhost', {
-        headers: { 'x-forwarded-for': '192.168.1.1' },
-      });
-
       // Create custom limiter with 3 requests per minute
       const { RateLimiter } = await import('../rate-limit');
       const limiter = new (RateLimiter as any)(3, 60 * 1000);

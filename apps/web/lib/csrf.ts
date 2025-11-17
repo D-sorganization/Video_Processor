@@ -128,19 +128,41 @@ export function requireCsrfToken(request: Request): Response | null {
 /**
  * CSRF token provider for client-side use
  * Add this to your root layout or pages that need CSRF protection
+ *
+ * NOTE: To use this, create a React component in a .tsx file:
+ *
+ * ```tsx
+ * 'use server';
+ * import { getCsrfToken } from '@/lib/csrf';
+ *
+ * export function CsrfTokenProvider({ children }: { children: React.ReactNode }) {
+ *   const token = getCsrfToken();
+ *   return (
+ *     <>
+ *       <meta name="csrf-token" content={token} />
+ *       {children}
+ *     </>
+ *   );
+ * }
+ * ```
+ *
+ * Or manually add the meta tag in your layout.tsx:
+ * ```tsx
+ * import { getCsrfToken } from '@/lib/csrf';
+ *
+ * export default function RootLayout({ children }) {
+ *   const csrfToken = getCsrfToken();
+ *   return (
+ *     <html>
+ *       <head>
+ *         <meta name="csrf-token" content={csrfToken} />
+ *       </head>
+ *       <body>{children}</body>
+ *     </html>
+ *   );
+ * }
+ * ```
  */
-export function CsrfTokenProvider({ children }: { children: React.ReactNode }) {
-  // Get or generate CSRF token
-  const token = getCsrfToken();
-
-  return (
-    <>
-      {/* Make token available to client via meta tag */}
-      <meta name="csrf-token" content={token} />
-      {children}
-    </>
-  );
-}
 
 /**
  * Client-side helper to get CSRF token

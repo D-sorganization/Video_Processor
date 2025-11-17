@@ -72,7 +72,7 @@ const MAGIC_BYTES: Record<string, Uint8Array[]> = {
 
 const VideoFileSchema = z.object({
   name: z.string().min(1).max(255),
-  size: z.number().positive().max(MAX_FILE_SIZE),
+  size: z.number().int().min(1).max(MAX_FILE_SIZE), // Explicitly reject zero-byte files
   type: z.enum(ALLOWED_MIME_TYPES as any), // Type assertion needed for Zod
 });
 
