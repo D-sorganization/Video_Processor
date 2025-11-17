@@ -477,7 +477,7 @@ describe('VideoUploader', () => {
       expect(onVideoUpload).toHaveBeenCalledWith(file);
     });
 
-    it('should handle zero-byte file', async () => {
+    it('should reject zero-byte file', async () => {
       const { container } = render(<VideoUploader onVideoUpload={onVideoUpload} />);
       const input = container.querySelector('input[type="file"]') as HTMLInputElement;
 
@@ -485,8 +485,9 @@ describe('VideoUploader', () => {
 
       await userEvent.upload(input, file);
 
-      // Zero-byte files are technically valid according to current validation
-      expect(onVideoUpload).toHaveBeenCalledWith(file);
+      // Zero-byte files should be rejected by validation
+      expect(onVideoUpload).not.toHaveBeenCalled();
+      expect(screen.getByText(/Invalid video file/i)).toBeInTheDocument();
     });
   });
 
