@@ -41,7 +41,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         if [ -f pyproject.toml ]; then pip install -e .; fi
         # ✅ Pin tool versions
-        pip install ruff==0.5.0 mypy==1.10.0 black==24.4.2 pytest pytest-cov
+        pip install ruff==0.5.0 mypy==1.10.0 black==24.4.2 pytest==8.3.3 pytest-cov==6.0.0
 
     - name: Check for placeholders and magic numbers
       run: |
@@ -130,6 +130,8 @@ jobs:
           exit $EXIT_CODE
         elif [ -f pytest.ini ]; then
           pytest --cov="$COV_TARGET" --cov-report=xml --cov-report=term-missing
+          EXIT_CODE=$?
+          exit $EXIT_CODE
         elif [ -d python/tests ]; then
           cd python
           if [ -d src ]; then
@@ -143,6 +145,8 @@ jobs:
           exit $EXIT_CODE
         elif [ -d tests ]; then
           pytest tests/ --cov="$COV_TARGET" --cov-report=xml --cov-report=term-missing
+          EXIT_CODE=$?
+          exit $EXIT_CODE
         else
           echo "⚠️ No tests directory found, skipping tests"
         fi
@@ -166,8 +170,8 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
-        # ✅ Always include token
-        token: ${{ secrets.CODECOV_TOKEN }}
+        # ✅ Only include token if available (for forked PRs compatibility)
+        token: ${{ secrets.CODECOV_TOKEN || '' }}
 
   security-check:
     runs-on: ubuntu-latest
