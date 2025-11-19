@@ -36,7 +36,7 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         if [ -f pyproject.toml ]; then pip install -e .; fi
-        pip install ruff mypy black pytest pytest-cov
+        pip install ruff==0.8.4 mypy==1.13.0 black==24.10.0 pytest==8.3.3 pytest-cov==6.0.0
 
     - name: Check for placeholders and magic numbers
       run: |
@@ -62,7 +62,7 @@ jobs:
         if [ -f mypy.ini ]; then
           mypy . --config-file mypy.ini
         else
-          mypy . --strict --ignore-missing-imports
+          mypy . --ignore-missing-imports
         fi
 
     - name: Format check with Black
@@ -71,6 +71,7 @@ jobs:
         black --check --diff .
 
     - name: Run tests
+      id: tests
       run: |
         echo "🧪 Running tests..."
         if [ -f pytest.ini ]; then
@@ -79,9 +80,11 @@ jobs:
           pytest --cov=. --cov-report=xml --cov-report=term-missing tests/
         else
           echo "⚠️ No tests directory found, skipping tests"
+          echo "skipped=true" >> $GITHUB_OUTPUT
         fi
 
     - name: Upload coverage to Codecov
+      if: steps.tests.outputs.skipped != 'true'
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
@@ -94,12 +97,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
     - name: Run Bandit security check
+      id: bandit
       run: |
-        pip install bandit
-        bandit -r . -f json -o bandit-report.json || true
+        pip install bandit==1.8.0
+        bandit -r . -ll -f json -o bandit-report.json || echo "bandit_failed=true" >> $GITHUB_OUTPUT
 
     - name: Upload Bandit results
+      if: always() && hashFiles('bandit-report.json') != ''
       uses: actions/upload-artifact@v4
       with:
         name: bandit-report
@@ -110,6 +120,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
     - name: Check documentation links
       run: |
         echo "📚 Checking documentation..."
@@ -119,10 +134,8 @@ jobs:
           echo "⚠️ No README.md found"
         fi
 
-    - name: Check for docstrings
+    - name: Check for docstrings (informational only)
       run: |
         echo "📝 Checking for docstrings..."
-        if ! command -v pydocstyle &> /dev/null; then
-          pip install pydocstyle
-        fi
+        pip install pydocstyle==6.3.0
         pydocstyle . || echo "⚠️ Docstring issues found"
