@@ -73,7 +73,7 @@ jobs:
         echo "🔍 Running MyPy type checker..."
         if [ -f mypy.ini ]; then
           mypy . --config-file mypy.ini
-        elif [ -f pyproject.toml ] && grep -q "tool\.mypy" pyproject.toml; then
+        elif [ -f pyproject.toml ] && grep -qE '^\s*\[tool\.mypy\]' pyproject.toml; then
           mypy .
         else
           # ✅ Non-strict fallback to avoid conflicts
@@ -190,7 +190,7 @@ jobs:
       run: |
         pip install bandit==1.7.7
         # ✅ Exclude test directories, target source code only
-        # Use --exclude for directory paths (more reliable than -x)
+        # Use --exclude with explicit paths and glob patterns for comprehensive coverage
         if [ -d python/src ]; then
           bandit -r python/src --exclude '**/tests/**' -f json -o bandit-report.json
         elif [ -d python ]; then
