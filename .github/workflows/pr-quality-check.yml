@@ -162,15 +162,6 @@ jobs:
         fi
 
     - name: Upload coverage to Codecov
-<<<<<<< HEAD
-      if: steps.tests.outputs.skipped != 'true'
-      uses: codecov/codecov-action@v4
-      with:
-        files: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
-=======
       if: steps.coverage-check.outputs.exists == 'true'
       uses: codecov/codecov-action@v4
       with:
@@ -180,7 +171,6 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
         # ✅ Token will be empty string for forked PRs (Codecov handles this gracefully)
->>>>>>> 3759fde5312a5c0699142e6bb10b753b74c21ceb
         token: ${{ secrets.CODECOV_TOKEN }}
 
   security-check:
