@@ -30,10 +30,6 @@ repos:
       files: ^python/.*  # All files under python/ and subdirectories
       exclude: |
         (?x)^(
-          python/matlab/|
-          python/matlab_utilities/|
-          python/javascript/|  # JavaScript/TypeScript code
-          python/apps/|  # Next.js app directory
           python/archive/|
           python/legacy/|
           python/experimental/|
