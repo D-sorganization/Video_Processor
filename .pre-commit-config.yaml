@@ -27,7 +27,7 @@ repos:
       additional_dependencies: ["types-requests", "types-PyYAML"]
       args: [--config-file=mypy.ini]
       types: [python]  # Only Python files - MyPy won't check JavaScript/TypeScript
-      files: ^python/  # Only python/ directory
+      files: ^python/.*  # All files under python/ and subdirectories
       exclude: |
         (?x)^(
           matlab/|
