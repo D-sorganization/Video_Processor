@@ -179,7 +179,7 @@ def check_ast_issues(content: str) -> list[tuple[int, str, str]]:
     return issues
 
 
-def check_file(filepath: Path) -> list[tuple[int, str, str]]:
+def check_file(filepath: Path) -> list[tuple[int, str, str]]:  # noqa: PLR0911
     """Check a Python file for quality issues."""
     # CRITICAL: Check if this is the script itself - MUST happen FIRST
     # Use multiple methods to ensure we catch it in all environments (local, CI, etc.)
@@ -187,7 +187,11 @@ def check_file(filepath: Path) -> list[tuple[int, str, str]]:
         return []
 
     # Additional safety check: if filename suggests it's the quality check script
-    if filepath.name in ("quality_check.py", "quality-check.py", "quality_check_script.py"):
+    if filepath.name in (
+        "quality_check.py",
+        "quality-check.py",
+        "quality_check_script.py",
+    ):
         # Verify with content signature before proceeding
         try:
             if filepath.exists():
@@ -243,10 +247,13 @@ def _check_absolute_path(filepath: Path) -> bool:  # noqa: PLR0911
         try:
             file_rel = filepath
             script_rel = Path(_SCRIPT_PATH.name)
-            if file_rel == script_rel or filepath.name == _SCRIPT_NAME:
-                # Double-check by comparing parent directory
-                if _SCRIPT_DIR and filepath.parent.resolve() == _SCRIPT_DIR:
-                    return True
+            # Double-check by comparing parent directory
+            if (
+                (file_rel == script_rel or filepath.name == _SCRIPT_NAME)
+                and _SCRIPT_DIR
+                and filepath.parent.resolve() == _SCRIPT_DIR
+            ):
+                return True
         except (OSError, ValueError):
             pass
     except (OSError, ValueError, AttributeError):
