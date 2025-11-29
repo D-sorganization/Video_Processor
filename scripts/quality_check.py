@@ -217,14 +217,15 @@ def _check_content_signature(filepath: Path) -> bool:
     try:
         with filepath.open(encoding="utf-8", errors="ignore") as f:
             content_start = f.read(4096)
+    except (OSError, ValueError):
+        return False
+    else:
         # Look for unique signature of quality check script
         return (
             "BANNED_PATTERNS = [" in content_start
             and "Quality check script" in content_start
             and "def should_exclude_file" in content_start
         )
-    except (OSError, ValueError):
-        return False
 
 
 def should_exclude_file(filepath: Path) -> bool:
