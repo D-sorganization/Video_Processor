@@ -117,14 +117,13 @@ def check_banned_patterns(
     if len(lines) > 0:
         file_content = "\n".join(lines)
         # Look for unique signature - if file contains pattern definitions, it's the script
-        if "BANNED_PATTERNS = [" in file_content:
-            # Verify it's the quality check script by checking for other unique markers
-            if (
-                "Quality check script" in file_content
-                or "def should_exclude_file" in file_content
-                or "def check_banned_patterns" in file_content
-            ):
-                return issues
+        # Verify it's the quality check script by checking for other unique markers
+        if "BANNED_PATTERNS = [" in file_content and (
+            "Quality check script" in file_content
+            or "def should_exclude_file" in file_content
+            or "def check_banned_patterns" in file_content
+        ):
+            return issues
 
     for line_num, line in enumerate(lines, 1):
         # Skip lines that are part of pattern definitions (avoid false positives)
