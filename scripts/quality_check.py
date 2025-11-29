@@ -113,11 +113,12 @@ def is_legitimate_pass_context(lines: list[str], line_num: int) -> bool:
 def check_banned_patterns(
     lines: list[str],
     filepath: Path,
+    is_excluded: bool = False,
 ) -> list[tuple[int, str, str]]:
     """Check for banned patterns in lines."""
     issues: list[tuple[int, str, str]] = []
-    # CRITICAL: Skip checking this file - must happen FIRST before any processing
-    if should_exclude_file(filepath):
+    # Skip if already excluded (check performed once in check_file)
+    if is_excluded:
         return issues
 
     # Process lines and check for banned patterns
@@ -143,11 +144,15 @@ def check_banned_patterns(
     return issues
 
 
-def check_magic_numbers(lines: list[str], filepath: Path) -> list[tuple[int, str, str]]:
+def check_magic_numbers(
+    lines: list[str],
+    filepath: Path,
+    is_excluded: bool = False,
+) -> list[tuple[int, str, str]]:
     """Check for magic numbers in lines."""
     issues: list[tuple[int, str, str]] = []
-    # Skip checking this file (should already be excluded in main, but double-check)
-    if should_exclude_file(filepath):
+    # Skip if already excluded (check performed once in check_file)
+    if is_excluded:
         return issues
     for line_num, line in enumerate(lines, 1):
         line_content = line[: line.index("#")] if "#" in line else line
@@ -186,57 +191,20 @@ def check_file(  # noqa: PLR0911, C901, PLR0912, PLR0915
 ) -> list[tuple[int, str, str]]:
     """Check a Python file for quality issues."""
     # CRITICAL: Check if this is the script itself - MUST happen FIRST
-    # Use multiple methods to ensure we catch it in all environments (local, CI, etc.)
+    # should_exclude_file() performs comprehensive checks (filename, path, content)
     if should_exclude_file(filepath):
         return []
 
-    # Additional safety check: compare with actual script path from __file__
-    if _SCRIPT_PATH is not None:
-        try:
-            file_abs = filepath.resolve()
-            if file_abs == _SCRIPT_PATH:
-                return []
-            # Also check relative paths (important for CI)
-            if _SCRIPT_RELATIVE is not None:
-                try:
-                    file_rel = filepath.relative_to(Path.cwd())
-                    if file_rel == _SCRIPT_RELATIVE:
-                        return []
-                except (ValueError, RuntimeError):
-                    # File not relative to cwd, that's ok
-                    pass
-        except (OSError, ValueError):
-            pass
-
-    # Additional safety check: if filename suggests it's the quality check script
-    if filepath.name in (
-        "quality_check.py",
-        "quality-check.py",
-        "quality_check_script.py",
-    ):
-        # Verify with content signature before proceeding
-        try:
-            if filepath.exists():
-                with filepath.open(encoding="utf-8", errors="ignore") as f:
-                    peek = f.read(2048)
-                # If it contains the pattern definitions, it's definitely this script
-                if "BANNED_PATTERNS = [" in peek:
-                    return []
-        except (OSError, ValueError):
-            pass
-
     try:
         content = filepath.read_text(encoding="utf-8")
-        # Final safety check: if content contains pattern definitions, it's this script
-        # This is the most reliable check - works regardless of path resolution
-        if "BANNED_PATTERNS = [" in content and "Quality check script" in content:
-            return []
-
         lines = content.splitlines()
 
+        # Cache exclusion result to avoid repeated expensive checks in helper functions
+        is_excluded = False
+
         issues = []
-        issues.extend(check_banned_patterns(lines, filepath))
-        issues.extend(check_magic_numbers(lines, filepath))
+        issues.extend(check_banned_patterns(lines, filepath, is_excluded))
+        issues.extend(check_magic_numbers(lines, filepath, is_excluded))
         issues.extend(check_ast_issues(content))
     except (OSError, UnicodeDecodeError) as e:
         return [(0, f"Error reading file: {e}", "")]
@@ -244,9 +212,13 @@ def check_file(  # noqa: PLR0911, C901, PLR0912, PLR0915
         return issues
 
 
+# Module-level constant for excluded filenames
+_EXCLUDED_NAMES = {"quality_check_script.py", "quality_check.py"}
+
+
 def _check_filename(filepath: Path) -> bool:
     """Check if file should be excluded by filename."""
-    excluded_names = {"quality_check_script.py", "quality_check.py", _SCRIPT_NAME}
+    excluded_names = _EXCLUDED_NAMES | {_SCRIPT_NAME}
     return filepath.name in excluded_names
 
 
@@ -339,47 +311,9 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         f for f in python_files if not any(part in exclude_dirs for part in f.parts)
     ]
 
-    # Filter out the script itself using the robust check
-    # Check multiple times with different methods to ensure we catch it
-    # This is CRITICAL - must exclude the script before any checks run
-    filtered_files = []
-    for f in python_files:
-        # Method 1: Use should_exclude_file (checks filename, path, content)
-        if should_exclude_file(f):
-            continue
-
-        # Method 2: Compare with actual script path from __file__ (most reliable)
-        if _SCRIPT_PATH is not None:
-            try:
-                file_abs = f.resolve()
-                if file_abs == _SCRIPT_PATH:
-                    continue
-                # Also check relative paths (important for CI where paths might differ)
-                if _SCRIPT_RELATIVE is not None:
-                    try:
-                        file_rel = f.relative_to(Path.cwd())
-                        if file_rel == _SCRIPT_RELATIVE:
-                            continue
-                    except (ValueError, RuntimeError):
-                        # File not relative to cwd, that's ok
-                        pass
-            except (OSError, ValueError):
-                pass
-
-        # Method 3: Check by name and verify with content signature
-        if "quality_check" in str(f).lower() and f.name.endswith(".py"):
-            # Verify with content signature (most reliable fallback)
-            try:
-                if f.exists():
-                    with f.open(encoding="utf-8", errors="ignore") as file:
-                        peek = file.read(4096)
-                    # Look for unique signature - if it has BANNED_PATTERNS, it's this script
-                    if "BANNED_PATTERNS = [" in peek and "Quality check script" in peek:
-                        continue
-            except (OSError, ValueError):
-                pass
-        filtered_files.append(f)
-    python_files = filtered_files
+    # Filter out the script itself using should_exclude_file()
+    # This function performs comprehensive checks (filename, path, content signature)
+    python_files = [f for f in python_files if not should_exclude_file(f)]
 
     all_issues = []
     for filepath in python_files:
