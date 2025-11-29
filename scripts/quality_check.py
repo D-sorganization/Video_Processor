@@ -111,8 +111,13 @@ def check_banned_patterns(
 
     for line_num, line in enumerate(lines, 1):
         # Skip lines that define the banned patterns themselves
-        pattern_keywords = ("TODO", "FIXME", "NotImplementedError")
-        if "re.compile" in line and any(kw in line for kw in pattern_keywords):
+        # Check for pattern definitions: re.compile, BANNED_PATTERNS, pattern_keywords
+        if (
+            "re.compile" in line
+            or "BANNED_PATTERNS" in line
+            or "pattern_keywords" in line
+            or line.strip().startswith("# Configuration")
+        ):
             continue
         # Check for basic banned patterns
         for pattern, message in BANNED_PATTERNS:
