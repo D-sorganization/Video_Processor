@@ -108,7 +108,7 @@ def check_banned_patterns(
     script_path = Path(__file__).resolve()
     file_path_resolved = filepath.resolve()
     excluded_names = ["quality_check_script.py", "quality_check.py"]
-    
+
     # Check by name or by absolute path
     if (
         filepath.name in excluded_names
@@ -156,7 +156,7 @@ def check_magic_numbers(lines: list[str], filepath: Path) -> list[tuple[int, str
     script_path = Path(__file__).resolve()
     file_path_resolved = filepath.resolve()
     excluded_names = ["quality_check_script.py", "quality_check.py"]
-    
+
     # Check by name or by absolute path
     if (
         filepath.name in excluded_names
