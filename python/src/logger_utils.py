@@ -48,13 +48,20 @@ def set_seeds(seed: int = DEFAULT_SEED) -> None:
     Args:
         seed: Random seed value (default: 42)
 
+    Raises:
+        ValueError: If seed is negative
+
     """
+    if seed < 0:
+        msg = "expected non-negative integer"
+        raise ValueError(msg)
+
     random.seed(seed)
 
     # Import numpy only when needed
-    import numpy as np
+    from numpy.random import default_rng
 
-    np.random.default_rng(seed)
+    default_rng(seed)
 
     # Set PyTorch seeds if PyTorch is available
     if TORCH_AVAILABLE:
