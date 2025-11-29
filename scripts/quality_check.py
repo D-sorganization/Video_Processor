@@ -104,10 +104,14 @@ def check_banned_patterns(
     """Check for banned patterns in lines."""
     issues: list[tuple[int, str, str]] = []
     # Skip checking this file for its own patterns
-    if filepath.name in ["quality_check_script.py", "quality_check.py"]:
+    script_name = Path(__file__).name
+    if filepath.name in ["quality_check_script.py", "quality_check.py"] or filepath.name == script_name:
         return issues
 
     for line_num, line in enumerate(lines, 1):
+        # Skip lines that define the banned patterns themselves
+        if "re.compile" in line and ("TODO" in line or "FIXME" in line or "NotImplementedError" in line):
+            continue
         # Check for basic banned patterns
         for pattern, message in BANNED_PATTERNS:
             if pattern.search(line):
@@ -133,7 +137,8 @@ def check_magic_numbers(lines: list[str], filepath: Path) -> list[tuple[int, str
     """Check for magic numbers in lines."""
     issues: list[tuple[int, str, str]] = []
     # Skip checking this file for magic numbers
-    if filepath.name in ["quality_check_script.py", "quality_check.py"]:
+    script_name = Path(__file__).name
+    if filepath.name in ["quality_check_script.py", "quality_check.py"] or filepath.name == script_name:
         return issues
     for line_num, line in enumerate(lines, 1):
         line_content = line[: line.index("#")] if "#" in line else line

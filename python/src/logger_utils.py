@@ -53,15 +53,17 @@ def set_seeds(seed: int = DEFAULT_SEED) -> None:
 
     """
     if seed < 0:
-        msg = "expected non-negative integer"
+        msg = f"Seed must be non-negative, got: {seed}"
         raise ValueError(msg)
 
     random.seed(seed)
 
-    # Import numpy only when needed
-    from numpy.random import default_rng
+    # Import numpy only when needed to set global random state
+    # Note: Using legacy np.random.seed for global state compatibility
+    # Modern code should use Generator instances, but this function sets global state
+    import numpy as np
 
-    default_rng(seed)
+    np.random.seed(seed)  # noqa: NPY002  # Set global numpy random state
 
     # Set PyTorch seeds if PyTorch is available
     if TORCH_AVAILABLE:
