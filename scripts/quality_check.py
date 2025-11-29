@@ -7,14 +7,17 @@ from pathlib import Path
 
 # Store the script's own path at module level for reliable exclusion
 # This MUST be set correctly for the exclusion to work
-if "__file__" in globals():
+# CRITICAL: Use __file__ to get the actual script path, works in all environments
+try:
     _SCRIPT_PATH = Path(__file__).resolve()
     _SCRIPT_NAME = Path(__file__).name
     _SCRIPT_DIR = Path(__file__).parent.resolve()
-else:
+    _SCRIPT_RELATIVE = Path(__file__)  # Keep relative path too for CI compatibility
+except NameError:
     _SCRIPT_PATH = None
     _SCRIPT_NAME = "quality_check.py"
     _SCRIPT_DIR = None
+    _SCRIPT_RELATIVE = None
 
 # Configuration
 BANNED_PATTERNS = [
@@ -185,6 +188,24 @@ def check_file(filepath: Path) -> list[tuple[int, str, str]]:  # noqa: PLR0911
     if should_exclude_file(filepath):
         return []
 
+    # Additional safety check: compare with actual script path from __file__
+    if _SCRIPT_PATH is not None:
+        try:
+            file_abs = filepath.resolve()
+            if file_abs == _SCRIPT_PATH:
+                return []
+            # Also check relative paths (important for CI)
+            if _SCRIPT_RELATIVE is not None:
+                try:
+                    file_rel = filepath.relative_to(Path.cwd())
+                    if file_rel == _SCRIPT_RELATIVE:
+                        return []
+                except (ValueError, RuntimeError):
+                    # File not relative to cwd, that's ok
+                    pass
+        except (OSError, ValueError):
+            pass
+
     # Additional safety check: if filename suggests it's the quality check script
     if filepath.name in (
         "quality_check.py",
@@ -205,6 +226,7 @@ def check_file(filepath: Path) -> list[tuple[int, str, str]]:  # noqa: PLR0911
     try:
         content = filepath.read_text(encoding="utf-8")
         # Final safety check: if content contains pattern definitions, it's this script
+        # This is the most reliable check - works regardless of path resolution
         if "BANNED_PATTERNS = [" in content and "Quality check script" in content:
             return []
 
@@ -323,19 +345,34 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         # Method 1: Use should_exclude_file (checks filename, path, content)
         if should_exclude_file(f):
             continue
-        # Method 2: Check by name and path string
+        
+        # Method 2: Compare with actual script path from __file__ (most reliable)
+        if _SCRIPT_PATH is not None:
+            try:
+                file_abs = f.resolve()
+                if file_abs == _SCRIPT_PATH:
+                    continue
+                # Also check relative paths (important for CI where paths might differ)
+                if _SCRIPT_RELATIVE is not None:
+                    try:
+                        file_rel = f.relative_to(Path.cwd())
+                        if file_rel == _SCRIPT_RELATIVE:
+                            continue
+                    except (ValueError, RuntimeError):
+                        # File not relative to cwd, that's ok
+                        pass
+            except (OSError, ValueError):
+                pass
+        
+        # Method 3: Check by name and verify with content signature
         if "quality_check" in str(f).lower() and f.name.endswith(".py"):
-            # Method 3: Verify with content signature (most reliable)
+            # Verify with content signature (most reliable fallback)
             try:
                 if f.exists():
                     with f.open(encoding="utf-8", errors="ignore") as file:
                         peek = file.read(4096)
-                    # Look for unique signature - all three must be present
-                    if (
-                        "BANNED_PATTERNS = [" in peek
-                        and "Quality check script" in peek
-                        and "def should_exclude_file" in peek
-                    ):
+                    # Look for unique signature - if it has BANNED_PATTERNS, it's this script
+                    if "BANNED_PATTERNS = [" in peek and "Quality check script" in peek:
                         continue
             except (OSError, ValueError):
                 pass
