@@ -124,7 +124,13 @@ def check_banned_patterns(
     for line_num, line in enumerate(lines, 1):
         # Skip lines that are part of pattern definitions (avoid false positives)
         # This is a critical check - must skip pattern definition lines
-        if "BANNED_PATTERNS" in line or "re.compile" in line or '"TODO placeholder' in line or '"FIXME placeholder' in line or '"NotImplementedError placeholder' in line:
+        if (
+            "BANNED_PATTERNS" in line
+            or "re.compile" in line
+            or '"TODO placeholder' in line
+            or '"FIXME placeholder' in line
+            or '"NotImplementedError placeholder' in line
+        ):
             continue
         # Check for basic banned patterns
         for pattern, message in BANNED_PATTERNS:
