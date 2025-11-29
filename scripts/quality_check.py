@@ -128,7 +128,7 @@ def check_banned_patterns(
 
     # Only process lines if we've confirmed this is NOT the script
     for line_num, line in enumerate(lines, 1):
-        # Skip lines that are part of pattern definitions or exclusion checks (avoid false positives)
+        # Skip lines that are part of pattern definitions or exclusion checks
         # This is a critical check - must skip ALL lines that could match patterns
         if (
             "BANNED_PATTERNS" in line
