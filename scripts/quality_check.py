@@ -186,7 +186,7 @@ def check_ast_issues(content: str) -> list[tuple[int, str, str]]:
     return issues
 
 
-def check_file(
+def check_file(  # noqa: PLR0911
     filepath: Path,
 ) -> list[tuple[int, str, str]]:
     """Check a Python file for quality issues."""
@@ -294,7 +294,7 @@ def should_exclude_file(filepath: Path) -> bool:
     return _check_content_signature(filepath)
 
 
-def main() -> None:  # noqa: C901, PLR0912, PLR0915
+def main() -> None:
     """Run quality checks on Python files."""
     python_files = list(Path().rglob("*.py"))
 
