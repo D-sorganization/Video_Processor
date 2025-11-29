@@ -7,8 +7,15 @@ import sys
 from pathlib import Path
 
 # Store the script's own path at module level for reliable exclusion
-_SCRIPT_PATH = Path(__file__).resolve() if "__file__" in globals() else None
-_SCRIPT_NAME = Path(__file__).name if "__file__" in globals() else "quality_check.py"
+# This MUST be set correctly for the exclusion to work
+if "__file__" in globals():
+    _SCRIPT_PATH = Path(__file__).resolve()
+    _SCRIPT_NAME = Path(__file__).name
+    _SCRIPT_DIR = Path(__file__).parent.resolve()
+else:
+    _SCRIPT_PATH = None
+    _SCRIPT_NAME = "quality_check.py"
+    _SCRIPT_DIR = None
 
 # Configuration
 BANNED_PATTERNS = [
@@ -107,37 +114,12 @@ def check_banned_patterns(
 ) -> list[tuple[int, str, str]]:
     """Check for banned patterns in lines."""
     issues: list[tuple[int, str, str]] = []
-    # CRITICAL: Skip checking this file (should already be excluded in main, but double-check)
+    # CRITICAL: Skip checking this file - must happen FIRST before any processing
     if should_exclude_file(filepath):
         return issues
 
-    # CRITICAL: Additional content-based check - MUST happen before any pattern matching
-    # Check if this file contains the pattern definitions - if so, it's the script itself
-    # This catches cases where path-based exclusion fails in CI
-    if len(lines) > 0:
-        file_content = "\n".join(lines)
-        # Look for unique signature - if file contains pattern definitions, it's the script
-        # Verify it's the quality check script by checking for other unique markers
-        if "BANNED_PATTERNS = [" in file_content and (
-            "Quality check script" in file_content
-            or "def should_exclude_file" in file_content
-            or "def check_banned_patterns" in file_content
-        ):
-            # This is definitely the script - return immediately, do NOT process any lines
-            return issues
-
-    # Only process lines if we've confirmed this is NOT the script
+    # Process lines and check for banned patterns
     for line_num, line in enumerate(lines, 1):
-        # Skip lines that are part of pattern definitions or exclusion checks
-        # This is a critical check - must skip ALL lines that could match patterns
-        if (
-            "BANNED_PATTERNS" in line
-            or "re.compile" in line
-            or "placeholder" in line.lower()  # Skip any line mentioning placeholders
-            or "should_exclude_file" in line
-            or "check_banned_patterns" in line
-        ):
-            continue
         # Check for basic banned patterns
         for pattern, message in BANNED_PATTERNS:
             if pattern.search(line):
@@ -197,42 +179,30 @@ def check_ast_issues(content: str) -> list[tuple[int, str, str]]:
     return issues
 
 
-def check_file(filepath: Path) -> list[tuple[int, str, str]]:  # noqa: PLR0911
+def check_file(filepath: Path) -> list[tuple[int, str, str]]:
     """Check a Python file for quality issues."""
-    # Early exclusion check - don't even read the file if it's the quality check script
-    # Check multiple ways to ensure we catch it in all environments
+    # CRITICAL: Check if this is the script itself - MUST happen FIRST
+    # Use multiple methods to ensure we catch it in all environments (local, CI, etc.)
     if should_exclude_file(filepath):
         return []
 
-    # Additional check: if file doesn't exist yet, try to identify by path
-    # This handles cases where path resolution differs
-    try:
-        path_str = str(filepath)
-        if (
-            "quality_check" in path_str.lower()
-            and filepath.name.endswith(".py")
-            and filepath.exists()
-        ):
-            # Double-check with content if file exists
-            try:
+    # Additional safety check: if filename suggests it's the quality check script
+    if filepath.name in ("quality_check.py", "quality-check.py", "quality_check_script.py"):
+        # Verify with content signature before proceeding
+        try:
+            if filepath.exists():
                 with filepath.open(encoding="utf-8", errors="ignore") as f:
-                    peek = f.read(1024)
+                    peek = f.read(2048)
+                # If it contains the pattern definitions, it's definitely this script
                 if "BANNED_PATTERNS = [" in peek:
                     return []
-            except (OSError, ValueError):
-                pass
-    except (AttributeError, TypeError):
-        pass
+        except (OSError, ValueError):
+            pass
 
     try:
         content = filepath.read_text(encoding="utf-8")
-        # Final content-based check before processing - MUST happen before any pattern matching
-        # Check for unique signature that identifies this script
-        if (
-            "BANNED_PATTERNS = [" in content
-            and "Quality check script" in content
-            and "def should_exclude_file" in content
-        ):
+        # Final safety check: if content contains pattern definitions, it's this script
+        if "BANNED_PATTERNS = [" in content and "Quality check script" in content:
             return []
 
         lines = content.splitlines()
@@ -259,6 +229,7 @@ def _check_absolute_path(filepath: Path) -> bool:  # noqa: PLR0911
         return False
     try:
         file_abs = filepath.resolve()
+        # Direct comparison
         if file_abs == _SCRIPT_PATH:
             return True
         # Check if paths point to same file (handles symlinks)
@@ -268,6 +239,16 @@ def _check_absolute_path(filepath: Path) -> bool:  # noqa: PLR0911
             and _SCRIPT_PATH.samefile(file_abs)
         ):
             return True
+        # Also check relative paths - in CI, paths might be relative
+        try:
+            file_rel = filepath
+            script_rel = Path(_SCRIPT_PATH.name)
+            if file_rel == script_rel or filepath.name == _SCRIPT_NAME:
+                # Double-check by comparing parent directory
+                if _SCRIPT_DIR and filepath.parent.resolve() == _SCRIPT_DIR:
+                    return True
+        except (OSError, ValueError):
+            pass
     except (OSError, ValueError, AttributeError):
         # samefile might not be available on all systems
         pass
