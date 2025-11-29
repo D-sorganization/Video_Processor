@@ -1,5 +1,7 @@
 # Core scientific computing libraries
-# numpy 2.1.0+ requires Python >=3.10, use 2.0.2 for Python 3.9 compatibility
+# NumPy 2.1.0+ dropped support for Python 3.9 (requires Python >=3.10)
+# See: https://numpy.org/devdocs/release/2.1.0-notes.html#python-3-9-support-dropped
+# Constraint can be relaxed when Python 3.9 support is no longer required
 numpy>=2.0.0,<2.1.0
 pandas==2.2.3
 matplotlib==3.9.1

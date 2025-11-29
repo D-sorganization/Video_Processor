@@ -59,8 +59,10 @@ def set_seeds(seed: int = DEFAULT_SEED) -> None:
     random.seed(seed)
 
     # Import numpy only when needed to set global random state
-    # Note: Using legacy np.random.seed for global state compatibility
-    # Modern code should use Generator instances, but this function sets global state
+    # Note: Using legacy np.random.seed() for global state compatibility.
+    # Modern NumPy recommends Generator instances (np.random.default_rng()),
+    # but this function sets global state for reproducibility across the codebase.
+    # The noqa comment suppresses NPY002 warning for this intentional legacy usage.
     import numpy as np
 
     np.random.seed(seed)  # noqa: NPY002  # Set global numpy random state
