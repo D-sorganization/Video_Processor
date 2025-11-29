@@ -187,60 +187,58 @@ def check_file(filepath: Path) -> list[tuple[int, str, str]]:
         return issues
 
 
-def should_exclude_file(filepath: Path) -> bool:
-    """Determine if a file should be excluded from checks."""
-    # 1. Check filename first (fastest check)
+def _check_filename(filepath: Path) -> bool:
+    """Check if file should be excluded by filename."""
     script_name = Path(__file__).name
     excluded_names = {"quality_check_script.py", "quality_check.py", script_name}
-    if filepath.name in excluded_names:
-        return True
+    return filepath.name in excluded_names
 
-    # 2. Check absolute path (works in most cases)
+
+def _check_absolute_path(filepath: Path) -> bool:
+    """Check if file should be excluded by absolute path."""
     try:
         script_abs = Path(__file__).resolve()
         file_abs = filepath.resolve()
         if script_abs == file_abs:
             return True
-        # Also check if paths point to same file (handles symlinks)
-        if script_abs.exists() and file_abs.exists():
-            if script_abs.samefile(file_abs):
-                return True
+        # Check if paths point to same file (handles symlinks)
+        if script_abs.exists() and file_abs.exists() and script_abs.samefile(file_abs):
+            return True
     except (OSError, ValueError, AttributeError):
         # samefile might not be available on all systems
         pass
-
-    # 3. Check if path contains quality_check (handles subdirectories)
-    try:
-        path_str = str(filepath)
-        if "quality_check" in path_str.lower():
-            # Double-check with content signature to avoid false positives
-            if filepath.exists():
-                try:
-                    with filepath.open(encoding="utf-8", errors="ignore") as f:
-                        content_start = f.read(2048)
-                    if "BANNED_PATTERNS = [" in content_start:
-                        return True
-                except (OSError, ValueError):
-                    pass
-    except (AttributeError, TypeError):
-        pass
-
-    # 4. Check content signature (fallback for CI environments)
-    if filepath.exists():
-        try:
-            with filepath.open(encoding="utf-8", errors="ignore") as f:
-                content_start = f.read(4096)
-            # Look for unique signature of quality check script
-            if (
-                "BANNED_PATTERNS = [" in content_start
-                and "Quality check script" in content_start
-                and "def should_exclude_file" in content_start
-            ):
-                return True
-        except (OSError, ValueError):
-            pass
-
     return False
+
+
+def _check_content_signature(filepath: Path) -> bool:
+    """Check if file should be excluded by content signature."""
+    if not filepath.exists():
+        return False
+    try:
+        with filepath.open(encoding="utf-8", errors="ignore") as f:
+            content_start = f.read(4096)
+        # Look for unique signature of quality check script
+        return (
+            "BANNED_PATTERNS = [" in content_start
+            and "Quality check script" in content_start
+            and "def should_exclude_file" in content_start
+        )
+    except (OSError, ValueError):
+        return False
+
+
+def should_exclude_file(filepath: Path) -> bool:
+    """Determine if a file should be excluded from checks."""
+    # Check filename first (fastest check)
+    if _check_filename(filepath):
+        return True
+
+    # Check absolute path (works in most cases)
+    if _check_absolute_path(filepath):
+        return True
+
+    # Check content signature (fallback for CI environments)
+    return _check_content_signature(filepath)
 
 
 def main() -> None:
