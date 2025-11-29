@@ -203,7 +203,7 @@ def _check_absolute_path(filepath: Path) -> bool:
         return False
     try:
         file_abs = filepath.resolve()
-        if _SCRIPT_PATH == file_abs:
+        if file_abs == _SCRIPT_PATH:
             return True
         # Check if paths point to same file (handles symlinks)
         if _SCRIPT_PATH.exists() and file_abs.exists() and _SCRIPT_PATH.samefile(file_abs):
