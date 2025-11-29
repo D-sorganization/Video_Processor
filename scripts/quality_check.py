@@ -121,6 +121,16 @@ def check_banned_patterns(
     if is_excluded:
         return issues
 
+    # Additional safety: check if this is the script by looking at content
+    # This catches cases where is_excluded wasn't set correctly
+    if len(lines) > 0:
+        file_content = "\n".join(lines)
+        if (
+            "BANNED_PATTERNS = [" in file_content
+            and "Quality check script" in file_content
+        ):
+            return issues
+
     # Process lines and check for banned patterns
     for line_num, line in enumerate(lines, 1):
         # Check for basic banned patterns
