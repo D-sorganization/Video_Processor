@@ -197,7 +197,7 @@ def _check_filename(filepath: Path) -> bool:
     return filepath.name in excluded_names
 
 
-def _check_absolute_path(filepath: Path) -> bool:
+def _check_absolute_path(filepath: Path) -> bool:  # noqa: PLR0911
     """Check if file should be excluded by absolute path."""
     if _SCRIPT_PATH is None:
         return False
