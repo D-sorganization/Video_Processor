@@ -103,40 +103,8 @@ def check_banned_patterns(
 ) -> list[tuple[int, str, str]]:
     """Check for banned patterns in lines."""
     issues: list[tuple[int, str, str]] = []
-    # Skip checking this file for its own patterns
-    script_name = Path(__file__).name
-    try:
-        script_path = Path(__file__).resolve()
-        file_path_resolved = filepath.resolve()
-    except (OSError, ValueError):
-        # If path resolution fails, fall back to name-only check
-        script_path = None
-        file_path_resolved = None
-
-    excluded_names = ["quality_check_script.py", "quality_check.py"]
-
-    # Check by name or by absolute path - exclude the quality check script itself
-    is_quality_check_script = (
-        filepath.name in excluded_names
-        or filepath.name == script_name
-        or (script_path is not None and file_path_resolved == script_path)
-    )
-
-    # Also check by content signature if path matching fails
-    if not is_quality_check_script and filepath.exists():
-        try:
-            # Read first few lines to check for quality check script signature
-            with filepath.open(encoding="utf-8", errors="ignore") as f:
-                content_start = f.read(4096)
-            if (
-                "BANNED_PATTERNS = [" in content_start
-                and "Quality check script" in content_start
-            ):
-                is_quality_check_script = True
-        except (OSError, ValueError):
-            pass
-
-    if is_quality_check_script:
+    # Skip checking this file for its own patterns (should already be excluded in main, but double-check)
+    if should_exclude_file(filepath):
         return issues
 
     for line_num, line in enumerate(lines, 1):
@@ -164,40 +132,8 @@ def check_banned_patterns(
 def check_magic_numbers(lines: list[str], filepath: Path) -> list[tuple[int, str, str]]:
     """Check for magic numbers in lines."""
     issues: list[tuple[int, str, str]] = []
-    # Skip checking this file for magic numbers
-    script_name = Path(__file__).name
-    try:
-        script_path = Path(__file__).resolve()
-        file_path_resolved = filepath.resolve()
-    except (OSError, ValueError):
-        # If path resolution fails, fall back to name-only check
-        script_path = None
-        file_path_resolved = None
-
-    excluded_names = ["quality_check_script.py", "quality_check.py"]
-
-    # Check by name or by absolute path
-    is_quality_check_script = (
-        filepath.name in excluded_names
-        or filepath.name == script_name
-        or (script_path is not None and file_path_resolved == script_path)
-    )
-
-    # Also check by content signature if path matching fails
-    if not is_quality_check_script and filepath.exists():
-        try:
-            # Read first few lines to check for quality check script signature
-            with filepath.open(encoding="utf-8", errors="ignore") as f:
-                content_start = f.read(4096)
-            if (
-                "BANNED_PATTERNS = [" in content_start
-                and "Quality check script" in content_start
-            ):
-                is_quality_check_script = True
-        except (OSError, ValueError):
-            pass
-
-    if is_quality_check_script:
+    # Skip checking this file for magic numbers (should already be excluded in main, but double-check)
+    if should_exclude_file(filepath):
         return issues
     for line_num, line in enumerate(lines, 1):
         line_content = line[: line.index("#")] if "#" in line else line
@@ -247,6 +183,42 @@ def check_file(filepath: Path) -> list[tuple[int, str, str]]:
         return issues
 
 
+def should_exclude_file(filepath: Path) -> bool:
+    """Determine if a file should be excluded from checks."""
+    exclude = False
+
+    # 1. Check filename
+    script_name = Path(__file__).name
+    if filepath.name in {script_name, "quality_check_script.py", "quality_check.py"}:
+        exclude = True
+
+    if not exclude:
+        # 2. Check absolute path
+        try:
+            script_abs = str(Path(__file__).resolve())
+            file_abs = str(filepath.resolve())
+            if script_abs == file_abs:
+                exclude = True
+        except (OSError, ValueError):
+            pass
+
+    if not exclude and filepath.exists():
+        # 3. Check content for unique identifier
+        try:
+            # Read only first 4096 bytes
+            with filepath.open(encoding="utf-8", errors="ignore") as f:
+                content_start = f.read(4096)
+            if (
+                "BANNED_PATTERNS = [" in content_start
+                and "Quality check script" in content_start
+            ):
+                exclude = True
+        except (OSError, ValueError):
+            pass
+
+    return exclude
+
+
 def main() -> None:
     """Run quality checks on Python files."""
     python_files = list(Path().rglob("*.py"))
@@ -268,6 +240,9 @@ def main() -> None:
     python_files = [
         f for f in python_files if not any(part in exclude_dirs for part in f.parts)
     ]
+
+    # Filter out the script itself using the robust check
+    python_files = [f for f in python_files if not should_exclude_file(f)]
 
     all_issues = []
     for filepath in python_files:
