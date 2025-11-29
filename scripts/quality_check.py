@@ -206,7 +206,11 @@ def _check_absolute_path(filepath: Path) -> bool:  # noqa: PLR0911
         if file_abs == _SCRIPT_PATH:
             return True
         # Check if paths point to same file (handles symlinks)
-        if _SCRIPT_PATH.exists() and file_abs.exists() and _SCRIPT_PATH.samefile(file_abs):
+        if (
+            _SCRIPT_PATH.exists()
+            and file_abs.exists()
+            and _SCRIPT_PATH.samefile(file_abs)
+        ):
             return True
     except (OSError, ValueError, AttributeError):
         # samefile might not be available on all systems
