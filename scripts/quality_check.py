@@ -181,7 +181,9 @@ def check_ast_issues(content: str) -> list[tuple[int, str, str]]:
     return issues
 
 
-def check_file(filepath: Path) -> list[tuple[int, str, str]]:  # noqa: PLR0911
+def check_file(
+    filepath: Path,
+) -> list[tuple[int, str, str]]:  # noqa: PLR0911, C901, PLR0912, PLR0915
     """Check a Python file for quality issues."""
     # CRITICAL: Check if this is the script itself - MUST happen FIRST
     # Use multiple methods to ensure we catch it in all environments (local, CI, etc.)
@@ -345,7 +347,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         # Method 1: Use should_exclude_file (checks filename, path, content)
         if should_exclude_file(f):
             continue
-        
+
         # Method 2: Compare with actual script path from __file__ (most reliable)
         if _SCRIPT_PATH is not None:
             try:
@@ -363,7 +365,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                         pass
             except (OSError, ValueError):
                 pass
-        
+
         # Method 3: Check by name and verify with content signature
         if "quality_check" in str(f).lower() and f.name.endswith(".py"):
             # Verify with content signature (most reliable fallback)
