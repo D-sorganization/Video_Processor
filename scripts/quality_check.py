@@ -1,4 +1,4 @@
-"""Quality check script to verify AI-generated code meets standards."""
+"""Quality check script to verify AI-generated code meets standards."""  # noqa: INP001
 
 import ast
 import re
