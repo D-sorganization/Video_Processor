@@ -5,7 +5,10 @@
 numpy>=2.0.0,<2.1.0
 pandas==2.2.3
 matplotlib==3.9.1
-scipy==1.14.0
+# SciPy 1.14.0+ requires Python >=3.10 (latest for Python 3.9 is 1.13.1)
+# See: https://scipy.github.io/devdocs/dev/toolchain.html#python-version-support
+# Constraint can be relaxed when Python 3.9 support is no longer required
+scipy>=1.13.0,<1.14.0
 
 # Testing and development
 pytest==8.2.1
