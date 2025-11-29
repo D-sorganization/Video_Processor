@@ -103,7 +103,7 @@ def check_banned_patterns(
 ) -> list[tuple[int, str, str]]:
     """Check for banned patterns in lines."""
     issues: list[tuple[int, str, str]] = []
-    # Skip checking this file for its own patterns (should already be excluded in main, but double-check)
+    # Skip checking this file (should already be excluded in main, but double-check)
     if should_exclude_file(filepath):
         return issues
 
@@ -132,7 +132,7 @@ def check_banned_patterns(
 def check_magic_numbers(lines: list[str], filepath: Path) -> list[tuple[int, str, str]]:
     """Check for magic numbers in lines."""
     issues: list[tuple[int, str, str]] = []
-    # Skip checking this file for magic numbers (should already be excluded in main, but double-check)
+    # Skip checking this file (should already be excluded in main, but double-check)
     if should_exclude_file(filepath):
         return issues
     for line_num, line in enumerate(lines, 1):
