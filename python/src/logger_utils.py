@@ -53,7 +53,7 @@ def set_seeds(seed: int = DEFAULT_SEED) -> None:
 
     """
     if seed < 0:
-        msg = f"Seed must be non-negative, got: {seed}"
+        msg = f"expected non-negative integer, got: {seed}"
         raise ValueError(msg)
 
     random.seed(seed)

@@ -105,28 +105,41 @@ def check_banned_patterns(
     issues: list[tuple[int, str, str]] = []
     # Skip checking this file for its own patterns
     script_name = Path(__file__).name
-    script_path = Path(__file__).resolve()
-    file_path_resolved = filepath.resolve()
+    try:
+        script_path = Path(__file__).resolve()
+        file_path_resolved = filepath.resolve()
+    except (OSError, ValueError):
+        # If path resolution fails, fall back to name-only check
+        script_path = None
+        file_path_resolved = None
+
     excluded_names = ["quality_check_script.py", "quality_check.py"]
 
-    # Check by name or by absolute path
-    if (
+    # Check by name or by absolute path - exclude the quality check script itself
+    is_quality_check_script = (
         filepath.name in excluded_names
         or filepath.name == script_name
-        or file_path_resolved == script_path
-    ):
+        or (script_path is not None and file_path_resolved == script_path)
+    )
+
+    # Also check by content signature if path matching fails
+    if not is_quality_check_script and filepath.exists():
+        try:
+            # Read first few lines to check for quality check script signature
+            with filepath.open(encoding="utf-8", errors="ignore") as f:
+                content_start = f.read(4096)
+            if (
+                "BANNED_PATTERNS = [" in content_start
+                and "Quality check script" in content_start
+            ):
+                is_quality_check_script = True
+        except (OSError, ValueError):
+            pass
+
+    if is_quality_check_script:
         return issues
 
     for line_num, line in enumerate(lines, 1):
-        # Skip lines that define the banned patterns themselves
-        # Check for pattern definitions: re.compile, BANNED_PATTERNS, pattern_keywords
-        if (
-            "re.compile" in line
-            or "BANNED_PATTERNS" in line
-            or "pattern_keywords" in line
-            or line.strip().startswith("# Configuration")
-        ):
-            continue
         # Check for basic banned patterns
         for pattern, message in BANNED_PATTERNS:
             if pattern.search(line):
@@ -153,16 +166,38 @@ def check_magic_numbers(lines: list[str], filepath: Path) -> list[tuple[int, str
     issues: list[tuple[int, str, str]] = []
     # Skip checking this file for magic numbers
     script_name = Path(__file__).name
-    script_path = Path(__file__).resolve()
-    file_path_resolved = filepath.resolve()
+    try:
+        script_path = Path(__file__).resolve()
+        file_path_resolved = filepath.resolve()
+    except (OSError, ValueError):
+        # If path resolution fails, fall back to name-only check
+        script_path = None
+        file_path_resolved = None
+
     excluded_names = ["quality_check_script.py", "quality_check.py"]
 
     # Check by name or by absolute path
-    if (
+    is_quality_check_script = (
         filepath.name in excluded_names
         or filepath.name == script_name
-        or file_path_resolved == script_path
-    ):
+        or (script_path is not None and file_path_resolved == script_path)
+    )
+
+    # Also check by content signature if path matching fails
+    if not is_quality_check_script and filepath.exists():
+        try:
+            # Read first few lines to check for quality check script signature
+            with filepath.open(encoding="utf-8", errors="ignore") as f:
+                content_start = f.read(4096)
+            if (
+                "BANNED_PATTERNS = [" in content_start
+                and "Quality check script" in content_start
+            ):
+                is_quality_check_script = True
+        except (OSError, ValueError):
+            pass
+
+    if is_quality_check_script:
         return issues
     for line_num, line in enumerate(lines, 1):
         line_content = line[: line.index("#")] if "#" in line else line
