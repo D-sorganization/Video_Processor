@@ -6,6 +6,10 @@ import re
 import sys
 from pathlib import Path
 
+# Store the script's own path at module level for reliable exclusion
+_SCRIPT_PATH = Path(__file__).resolve() if "__file__" in globals() else None
+_SCRIPT_NAME = Path(__file__).name if "__file__" in globals() else "quality_check.py"
+
 # Configuration
 BANNED_PATTERNS = [
     (re.compile(r"\bTODO\b"), "TODO placeholder found"),
@@ -189,20 +193,20 @@ def check_file(filepath: Path) -> list[tuple[int, str, str]]:
 
 def _check_filename(filepath: Path) -> bool:
     """Check if file should be excluded by filename."""
-    script_name = Path(__file__).name
-    excluded_names = {"quality_check_script.py", "quality_check.py", script_name}
+    excluded_names = {"quality_check_script.py", "quality_check.py", _SCRIPT_NAME}
     return filepath.name in excluded_names
 
 
 def _check_absolute_path(filepath: Path) -> bool:
     """Check if file should be excluded by absolute path."""
+    if _SCRIPT_PATH is None:
+        return False
     try:
-        script_abs = Path(__file__).resolve()
         file_abs = filepath.resolve()
-        if script_abs == file_abs:
+        if _SCRIPT_PATH == file_abs:
             return True
         # Check if paths point to same file (handles symlinks)
-        if script_abs.exists() and file_abs.exists() and script_abs.samefile(file_abs):
+        if _SCRIPT_PATH.exists() and file_abs.exists() and _SCRIPT_PATH.samefile(file_abs):
             return True
     except (OSError, ValueError, AttributeError):
         # samefile might not be available on all systems
