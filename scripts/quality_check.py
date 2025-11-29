@@ -278,7 +278,7 @@ def should_exclude_file(filepath: Path) -> bool:
     return _check_content_signature(filepath)
 
 
-def main() -> None:
+def main() -> None:  # noqa: C901, PLR0912, PLR0915
     """Run quality checks on Python files."""
     python_files = list(Path().rglob("*.py"))
 
