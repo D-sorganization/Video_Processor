@@ -181,9 +181,9 @@ def check_ast_issues(content: str) -> list[tuple[int, str, str]]:
     return issues
 
 
-def check_file(
+def check_file(  # noqa: PLR0911, C901, PLR0912, PLR0915
     filepath: Path,
-) -> list[tuple[int, str, str]]:  # noqa: PLR0911, C901, PLR0912, PLR0915
+) -> list[tuple[int, str, str]]:
     """Check a Python file for quality issues."""
     # CRITICAL: Check if this is the script itself - MUST happen FIRST
     # Use multiple methods to ensure we catch it in all environments (local, CI, etc.)
