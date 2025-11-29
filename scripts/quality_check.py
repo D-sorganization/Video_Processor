@@ -111,9 +111,20 @@ def check_banned_patterns(
     if should_exclude_file(filepath):
         return issues
 
+    # Additional content-based check - look for script signature in first few lines
+    # This catches cases where path-based exclusion fails in CI
+    if len(lines) > 0:
+        first_lines = "\n".join(lines[:30])  # Check first 30 lines
+        if (
+            "BANNED_PATTERNS = [" in first_lines
+            and "Quality check script" in first_lines
+        ):
+            return issues
+
     for line_num, line in enumerate(lines, 1):
         # Skip lines that are part of pattern definitions (avoid false positives)
-        if "BANNED_PATTERNS" in line or "re.compile" in line:
+        # This is a critical check - must skip pattern definition lines
+        if "BANNED_PATTERNS" in line or "re.compile" in line or '"TODO placeholder' in line or '"FIXME placeholder' in line or '"NotImplementedError placeholder' in line:
             continue
         # Check for basic banned patterns
         for pattern, message in BANNED_PATTERNS:
@@ -203,8 +214,13 @@ def check_file(filepath: Path) -> list[tuple[int, str, str]]:  # noqa: PLR0911
 
     try:
         content = filepath.read_text(encoding="utf-8")
-        # Final content-based check before processing
-        if "BANNED_PATTERNS = [" in content and "Quality check script" in content:
+        # Final content-based check before processing - MUST happen before any pattern matching
+        # Check for unique signature that identifies this script
+        if (
+            "BANNED_PATTERNS = [" in content
+            and "Quality check script" in content
+            and "def should_exclude_file" in content
+        ):
             return []
 
         lines = content.splitlines()
@@ -302,19 +318,25 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
 
     # Filter out the script itself using the robust check
     # Check multiple times with different methods to ensure we catch it
+    # This is CRITICAL - must exclude the script before any checks run
     filtered_files = []
     for f in python_files:
-        # Check exclusion multiple ways
+        # Method 1: Use should_exclude_file (checks filename, path, content)
         if should_exclude_file(f):
             continue
-        # Also check by name and path string
+        # Method 2: Check by name and path string
         if "quality_check" in str(f).lower() and f.name.endswith(".py"):
-            # Verify with content signature
+            # Method 3: Verify with content signature (most reliable)
             try:
                 if f.exists():
                     with f.open(encoding="utf-8", errors="ignore") as file:
-                        peek = file.read(2048)
-                    if "BANNED_PATTERNS = [" in peek:
+                        peek = file.read(4096)
+                    # Look for unique signature - all three must be present
+                    if (
+                        "BANNED_PATTERNS = [" in peek
+                        and "Quality check script" in peek
+                        and "def should_exclude_file" in peek
+                    ):
                         continue
             except (OSError, ValueError):
                 pass
