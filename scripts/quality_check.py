@@ -113,13 +113,18 @@ def check_banned_patterns(
 
     # Additional content-based check - look for script signature in first few lines
     # This catches cases where path-based exclusion fails in CI
+    # Check if this file contains the pattern definitions - if so, it's the script itself
     if len(lines) > 0:
-        first_lines = "\n".join(lines[:30])  # Check first 30 lines
-        if (
-            "BANNED_PATTERNS = [" in first_lines
-            and "Quality check script" in first_lines
-        ):
-            return issues
+        file_content = "\n".join(lines)
+        # Look for unique signature - if file contains pattern definitions, it's the script
+        if "BANNED_PATTERNS = [" in file_content:
+            # Verify it's the quality check script by checking for other unique markers
+            if (
+                "Quality check script" in file_content
+                or "def should_exclude_file" in file_content
+                or "def check_banned_patterns" in file_content
+            ):
+                return issues
 
     for line_num, line in enumerate(lines, 1):
         # Skip lines that are part of pattern definitions (avoid false positives)
