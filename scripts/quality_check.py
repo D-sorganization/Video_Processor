@@ -156,7 +156,7 @@ def check_banned_patterns(  # noqa: PLR0911
             re.search(r'\(re\.compile\(r"[^"]*TODO', line)
             or re.search(r'\(re\.compile\(r"[^"]*FIXME', line)
             or re.search(r'\(re\.compile\(r"[^"]*NotImplementedError', line)
-            or re.search(r'^\s*BANNED_PATTERNS\s*=', line)
+            or re.search(r"^\s*BANNED_PATTERNS\s*=", line)
             or '"TODO placeholder' in line
             or '"FIXME placeholder' in line
             or '"NotImplementedError placeholder' in line
