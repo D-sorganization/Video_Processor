@@ -426,6 +426,7 @@ def main() -> None:
     # Filter out the script itself - use hardcoded filename check FIRST for reliability
     # This works in all environments (local, CI, etc.) regardless of path resolution
     # CRITICAL: This MUST be the first filter to ensure the script is never processed
+    # Check filename, path string, and scripts/quality_check combination
     python_files = [
         f
         for f in python_files
@@ -437,6 +438,11 @@ def main() -> None:
                 "quality_check_script.py",
             )
             or ("quality_check" in str(f).lower() and str(f).endswith(".py"))
+            or (
+                "scripts" in str(f).lower()
+                and "quality_check" in str(f).lower()
+                and str(f).endswith(".py")
+            )
         )
     ]
     # Additional filter using should_exclude_file() for comprehensive checks
