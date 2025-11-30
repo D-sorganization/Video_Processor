@@ -48,13 +48,24 @@ def set_seeds(seed: int = DEFAULT_SEED) -> None:
     Args:
         seed: Random seed value (default: 42)
 
+    Raises:
+        ValueError: If seed is negative
+
     """
+    if seed < 0:
+        msg = f"expected non-negative integer, got: {seed}"
+        raise ValueError(msg)
+
     random.seed(seed)
 
-    # Import numpy only when needed
+    # Import numpy only when needed to set global random state
+    # Note: Using legacy np.random.seed() for global state compatibility.
+    # Modern NumPy recommends Generator instances (np.random.default_rng()),
+    # but this function sets global state for reproducibility across the codebase.
+    # The noqa comment suppresses NPY002 warning for this intentional legacy usage.
     import numpy as np
 
-    np.random.default_rng(seed)
+    np.random.seed(seed)  # noqa: NPY002  # Set global numpy random state
 
     # Set PyTorch seeds if PyTorch is available
     if TORCH_AVAILABLE:
