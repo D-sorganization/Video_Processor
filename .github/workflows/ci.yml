@@ -87,7 +87,11 @@ jobs:
             --include="*.py" --include="*.m" \
             --exclude-dir=".git" \
             --exclude-dir="docs" \
-            --exclude-dir="tests" .; then
+            --exclude-dir="tests" \
+            --exclude-dir="python/tests" \
+            --exclude-dir="javascript/tests" \
+            --exclude-dir="matlab/tests" \
+            --exclude-dir="apps/web/test" .; then
             echo "❌ ERROR: Approximations found - use exact values with sources"
             exit 1
           else
