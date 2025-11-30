@@ -139,7 +139,7 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     # Also check against __file__ if available for absolute certainty
     filepath_str = str(filepath)
     filepath_lower = filepath_str.lower()
-    
+
     # Check 1: Exact filename match
     if filepath.name in (
         "quality_check.py",
@@ -147,11 +147,11 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
         "quality_check_script.py",
     ):
         return issues
-    
+
     # Check 2: quality_check in path + ends with .py
     if "quality_check" in filepath_lower and filepath_lower.endswith(".py"):
         return issues
-    
+
     # Check 3: scripts + quality_check in path + ends with .py
     if (
         "scripts" in filepath_lower
@@ -159,7 +159,7 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
         and filepath_lower.endswith(".py")
     ):
         return issues
-    
+
     # Check 4: Compare against __file__ if available (most reliable)
     if _SCRIPT_PATH is not None:
         try:
