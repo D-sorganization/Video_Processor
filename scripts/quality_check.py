@@ -150,10 +150,16 @@ def check_banned_patterns(  # noqa: PLR0911
     # Only reach here if content check didn't exclude the file
     for line_num, line in enumerate(lines, 1):
         # Skip lines that are pattern definitions (avoid false positives)
-        # Check for actual pattern definition lines, not just substring matches
-        if re.match(r"^\s*\(re\.compile", line) or re.match(
-            r"^\s*BANNED_PATTERNS\s*=",
-            line,
+        # Check for actual pattern definition lines - these contain the patterns themselves
+        # Match lines like: (re.compile(r"\bTODO\b"), "TODO placeholder found"),
+        if (
+            re.search(r'\(re\.compile\(r"[^"]*TODO', line)
+            or re.search(r'\(re\.compile\(r"[^"]*FIXME', line)
+            or re.search(r'\(re\.compile\(r"[^"]*NotImplementedError', line)
+            or re.search(r'^\s*BANNED_PATTERNS\s*=', line)
+            or '"TODO placeholder' in line
+            or '"FIXME placeholder' in line
+            or '"NotImplementedError placeholder' in line
         ):
             continue
         # Check for basic banned patterns
