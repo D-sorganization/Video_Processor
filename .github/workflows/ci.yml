@@ -56,7 +56,7 @@ jobs:
             -not -path "./.mypy_cache/*" \
             -not -path "./scripts/quality_check.py" \
             -not -path "./scripts/quality-check.py" \
-            -exec grep -l "TODO\|FIXME\|XXX\|HACK\|pass #\|\.\.\..*#\|NotImplementedError" {} \;; then
+            -exec grep -l "TODO\|FIXME\|XXX\|HACK\|pass #\|\.\.\..*#\|NotImplementedError" {} \; | grep -q .; then
             echo "❌ ERROR: Placeholders found in code"
             exit 1
           else
