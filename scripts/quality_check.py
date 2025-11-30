@@ -129,7 +129,8 @@ def check_banned_patterns(  # noqa: PLR0911
 
     # CRITICAL: Check content FIRST before any processing
     # This MUST happen before pattern matching to prevent self-detection
-    if len(lines) > 0:
+    # This is the most important check - must run before ANY pattern matching
+    if lines:
         file_content = "\n".join(lines)
         # Primary check: unique marker (most reliable)
         if _QUALITY_CHECK_SCRIPT_MARKER in file_content:
@@ -146,9 +147,14 @@ def check_banned_patterns(  # noqa: PLR0911
         return issues
 
     # Process lines and check for banned patterns
+    # Only reach here if content check didn't exclude the file
     for line_num, line in enumerate(lines, 1):
         # Skip lines that are pattern definitions (avoid false positives)
-        if "BANNED_PATTERNS" in line or "re.compile" in line:
+        # Check for actual pattern definition lines, not just substring matches
+        if re.match(r"^\s*\(re\.compile", line) or re.match(
+            r"^\s*BANNED_PATTERNS\s*=",
+            line,
+        ):
             continue
         # Check for basic banned patterns
         for pattern, message in BANNED_PATTERNS:
