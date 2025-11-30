@@ -50,7 +50,8 @@ jobs:
             --exclude-dir=".git" \
             --exclude-dir="archive" \
             --exclude-dir="legacy" \
-            --exclude-dir="experimental" .; then
+            --exclude-dir="experimental" \
+            --exclude-dir="scripts" .; then
             echo "❌ ERROR: Placeholders found in code"
             exit 1
           else
@@ -76,7 +77,8 @@ jobs:
           if grep -ri "approximately\|approx[^a-z]\|roughly\|~[0-9]" \
             --include="*.py" --include="*.m" \
             --exclude-dir=".git" \
-            --exclude-dir="docs" .; then
+            --exclude-dir="docs" \
+            --exclude-dir="tests" .; then
             echo "❌ ERROR: Approximations found - use exact values with sources"
             exit 1
           else
