@@ -104,7 +104,15 @@ def check_banned_patterns(
     """Check for banned patterns in lines."""
     issues: list[tuple[int, str, str]] = []
     # Skip checking this file for its own patterns
-    if filepath.name in ["quality_check_script.py", "quality_check.py"]:
+    # Match exact filenames (with both underscore and hyphen variants)
+    excluded_names = [
+        "quality_check_script.py",
+        "quality_check.py",
+        "quality-check.py",
+        "quality-check-script.py",
+        "matlab_quality_check.py",  # Checks for placeholders, contains patterns it checks for
+    ]
+    if filepath.name in excluded_names:
         return issues
 
     for line_num, line in enumerate(lines, 1):
@@ -133,7 +141,15 @@ def check_magic_numbers(lines: list[str], filepath: Path) -> list[tuple[int, str
     """Check for magic numbers in lines."""
     issues: list[tuple[int, str, str]] = []
     # Skip checking this file for magic numbers
-    if filepath.name in ["quality_check_script.py", "quality_check.py"]:
+    # Match exact filenames (with both underscore and hyphen variants)
+    excluded_names = [
+        "quality_check_script.py",
+        "quality_check.py",
+        "quality-check.py",
+        "quality-check-script.py",
+        "matlab_quality_check.py",  # Checks for placeholders, contains patterns it checks for
+    ]
+    if filepath.name in excluded_names:
         return issues
     for line_num, line in enumerate(lines, 1):
         line_content = line[: line.index("#")] if "#" in line else line
@@ -203,6 +219,20 @@ def main() -> None:
     }
     python_files = [
         f for f in python_files if not any(part in exclude_dirs for part in f.parts)
+    ]
+
+    # Exclude quality check scripts themselves (they contain the patterns they check for)
+    # Match exact filenames (with both underscore and hyphen variants)
+    excluded_script_names = [
+        "quality_check.py",
+        "quality_check_script.py",
+        "quality-check.py",
+        "quality-check-script.py",
+        "matlab_quality_check.py",  # Checks for placeholders, contains patterns it checks for
+    ]
+    python_files = [
+        f for f in python_files
+        if f.name not in excluded_script_names
     ]
 
     all_issues = []
