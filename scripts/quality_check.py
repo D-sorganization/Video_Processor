@@ -10,10 +10,10 @@ from typing import Optional
 # This MUST be set correctly for the exclusion to work
 # CRITICAL: Use __file__ to get the actual script path, works in all environments
 try:
-    _SCRIPT_PATH: Path | None = Path(__file__).resolve()
+    _SCRIPT_PATH: Optional[Path] = Path(__file__).resolve()
     _SCRIPT_NAME: str = Path(__file__).name
-    _SCRIPT_DIR: Path | None = Path(__file__).parent.resolve()
-    _SCRIPT_RELATIVE: Path | None = Path(
+    _SCRIPT_DIR: Optional[Path] = Path(__file__).parent.resolve()
+    _SCRIPT_RELATIVE: Optional[Path] = Path(
         __file__
     )  # Keep relative path too for CI compatibility
 except NameError:
