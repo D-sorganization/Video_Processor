@@ -28,6 +28,10 @@ except NameError:
 # Unique marker to identify this script - used for exclusion
 _QUALITY_CHECK_SCRIPT_MARKER = "QUALITY_CHECK_SCRIPT_V1"
 
+# Maximum file size (lines) for tertiary exclusion check
+# Files with BANNED_PATTERNS smaller than this are likely the quality check script
+_MAX_SCRIPT_SIZE_LINES: int = 400
+
 # Configuration
 BANNED_PATTERNS = [
     (re.compile(r"\bTODO\b"), "TODO placeholder found"),
@@ -119,7 +123,7 @@ def is_legitimate_pass_context(lines: list[str], line_num: int) -> bool:
     )
 
 
-def check_banned_patterns(  # noqa: PLR0911
+def check_banned_patterns(  # noqa: PLR0911, C901
     lines: list[str],
     filepath: Path,  # noqa: ARG001
     is_excluded: bool = False,  # noqa: FBT001, FBT002
@@ -143,7 +147,10 @@ def check_banned_patterns(  # noqa: PLR0911
             return issues
         # Tertiary check: just pattern definitions (catches edge cases in CI)
         # If file has BANNED_PATTERNS and is reasonably small, it's likely this script
-        if "BANNED_PATTERNS = [" in file_content and len(lines) < 400:
+        if (
+            "BANNED_PATTERNS = [" in file_content
+            and len(lines) < _MAX_SCRIPT_SIZE_LINES
+        ):
             return issues
 
     # Skip if already excluded (check performed once in check_file)
