@@ -132,13 +132,18 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     """Check for banned patterns in lines."""
     issues: list[tuple[int, str, str]] = []
 
-    # CRITICAL: Hardcoded filename check - ABSOLUTE FIRST check before ANY processing
+    # CRITICAL: Hardcoded filename/path check - ABSOLUTE FIRST check before ANY processing
     # This is the most reliable check that works in all environments (local, CI, etc.)
-    # Check filename first before any content processing
-    if filepath.name in (
-        "quality_check.py",
-        "quality-check.py",
-        "quality_check_script.py",
+    # Check filename AND path string to catch all variations
+    filepath_str = str(filepath)
+    if (
+        filepath.name in (
+            "quality_check.py",
+            "quality-check.py",
+            "quality_check_script.py",
+        )
+        or "quality_check" in filepath_str.lower()
+        and filepath_str.endswith(".py")
     ):
         return issues
 
@@ -259,7 +264,20 @@ def check_file(  # noqa: PLR0911
     filepath: Path,
 ) -> list[tuple[int, str, str]]:
     """Check a Python file for quality issues."""
-    # CRITICAL: Check if this is the script itself - MUST happen FIRST
+    # CRITICAL: Hardcoded filename/path check - ABSOLUTE FIRST check
+    # This works in all environments and doesn't depend on path resolution
+    filepath_str = str(filepath)
+    if (
+        filepath.name in (
+            "quality_check.py",
+            "quality-check.py",
+            "quality_check_script.py",
+        )
+        or ("quality_check" in filepath_str.lower() and filepath_str.endswith(".py"))
+    ):
+        return []
+
+    # CRITICAL: Check if this is the script itself - MUST happen SECOND
     # should_exclude_file() performs comprehensive checks (filename, path, content)
     if should_exclude_file(filepath):
         return []
