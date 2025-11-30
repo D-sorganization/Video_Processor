@@ -113,7 +113,7 @@ def is_legitimate_pass_context(lines: list[str], line_num: int) -> bool:
     )
 
 
-def check_banned_patterns(
+def check_banned_patterns(  # noqa: PLR0911
     lines: list[str],
     filepath: Path,  # noqa: ARG001
     is_excluded: bool = False,  # noqa: FBT001, FBT002
@@ -217,9 +217,12 @@ def check_file(  # noqa: PLR0911
 
     try:
         content = filepath.read_text(encoding="utf-8")
-        # Additional safety check: if content contains pattern definitions, it's this script
+        # Additional safety check: if content contains unique marker or pattern definitions, it's this script
         # This is the most reliable check - works regardless of path resolution
-        if "BANNED_PATTERNS = [" in content and "Quality check script" in content:
+        if (
+            _QUALITY_CHECK_SCRIPT_MARKER in content
+            or ("BANNED_PATTERNS = [" in content and "Quality check script" in content)
+        ):
             return []
 
         lines = content.splitlines()
