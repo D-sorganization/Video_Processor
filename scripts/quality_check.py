@@ -126,11 +126,21 @@ def is_legitimate_pass_context(lines: list[str], line_num: int) -> bool:
 
 def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     lines: list[str],
-    filepath: Path,  # noqa: ARG001
+    filepath: Path,
     is_excluded: bool = False,  # noqa: FBT001, FBT002
 ) -> list[tuple[int, str, str]]:
     """Check for banned patterns in lines."""
     issues: list[tuple[int, str, str]] = []
+
+    # CRITICAL: Hardcoded filename check - ABSOLUTE FIRST check before ANY processing
+    # This is the most reliable check that works in all environments (local, CI, etc.)
+    # Check filename first before any content processing
+    if filepath.name in (
+        "quality_check.py",
+        "quality-check.py",
+        "quality_check_script.py",
+    ):
+        return issues
 
     # CRITICAL: Check content FIRST before any processing
     # This MUST happen before pattern matching to prevent self-detection
@@ -142,7 +152,7 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     # Join lines into content string for checking
     file_content = "\n".join(lines)
 
-    # ABSOLUTE FIRST CHECK: If file contains BANNED_PATTERNS definition, it's this script
+    # ABSOLUTE FIRST CONTENT CHECK: If file contains BANNED_PATTERNS definition, it's this script
     # This is the most reliable check - only this script contains BANNED_PATTERNS = [
     # MUST be checked FIRST before any other checks
     if "BANNED_PATTERNS = [" in file_content:
