@@ -4,6 +4,7 @@ import ast
 import re
 import sys
 from pathlib import Path
+from typing import Optional
 
 # Store the script's own path at module level for reliable exclusion
 # This MUST be set correctly for the exclusion to work
