@@ -139,9 +139,16 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     if not lines:
         return issues
 
+    # Join lines into content string for checking
     file_content = "\n".join(lines)
 
-    # Primary check: unique marker (most reliable) - MUST be first
+    # ABSOLUTE FIRST CHECK: If file contains BANNED_PATTERNS definition, it's this script
+    # This is the most reliable check - only this script contains BANNED_PATTERNS = [
+    # MUST be checked FIRST before any other checks
+    if "BANNED_PATTERNS = [" in file_content:
+        return issues
+
+    # Primary check: unique marker (most reliable) - MUST be second
     # This marker is in the file header as a comment
     if _QUALITY_CHECK_SCRIPT_MARKER in file_content:
         return issues
@@ -153,12 +160,6 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     # Tertiary check: pattern definitions + reasonable size
     # If file has BANNED_PATTERNS and is reasonably small, it's likely this script
     if "BANNED_PATTERNS = [" in file_content and len(lines) < _MAX_SCRIPT_SIZE_LINES:
-        return issues
-
-    # Quaternary check: just pattern definitions (most permissive, catches all edge cases)
-    # This is a last resort - if file has BANNED_PATTERNS, exclude it to be safe
-    # This MUST be the final check before pattern matching
-    if "BANNED_PATTERNS = [" in file_content:
         return issues
 
     # Skip if already excluded (check performed once in check_file)
