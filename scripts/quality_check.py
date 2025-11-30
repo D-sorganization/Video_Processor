@@ -406,8 +406,23 @@ def main() -> None:
         f for f in python_files if not any(part in exclude_dirs for part in f.parts)
     ]
 
-    # Filter out the script itself using should_exclude_file()
-    # This function performs comprehensive checks (filename, path, content signature)
+    # Filter out the script itself - use hardcoded filename check FIRST for reliability
+    # This works in all environments (local, CI, etc.) regardless of path resolution
+    # CRITICAL: This MUST be the first filter to ensure the script is never processed
+    python_files = [
+        f
+        for f in python_files
+        if not (
+            f.name
+            in (
+                "quality_check.py",
+                "quality-check.py",
+                "quality_check_script.py",
+            )
+            or ("quality_check" in str(f).lower() and str(f).endswith(".py"))
+        )
+    ]
+    # Additional filter using should_exclude_file() for comprehensive checks
     python_files = [f for f in python_files if not should_exclude_file(f)]
 
     all_issues = []
