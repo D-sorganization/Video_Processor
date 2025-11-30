@@ -148,11 +148,9 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     ):
         return issues
 
-    # Check 2: quality_check in path + ends with .py
-    if "quality_check" in filepath_lower and filepath_lower.endswith(".py"):
-        return issues
-
-    # Check 3: scripts + quality_check in path + ends with .py
+    # Check 2: scripts/quality_check.py path combination (for CI environments)
+    # Only match if path contains both "scripts" and "quality_check" and ends with .py
+    # This is more specific than just "quality_check" anywhere in path
     if (
         "scripts" in filepath_lower
         and "quality_check" in filepath_lower
@@ -188,22 +186,9 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     if "BANNED_PATTERNS = [" in file_content:
         return issues
 
-    # Additional safety: check for the marker in content
-    if _QUALITY_CHECK_SCRIPT_MARKER in file_content:
-        return issues
-
-    # Primary check: unique marker (most reliable) - MUST be second
+    # Additional safety: check for the unique marker in content
     # This marker is in the file header as a comment
     if _QUALITY_CHECK_SCRIPT_MARKER in file_content:
-        return issues
-
-    # Secondary check: pattern definitions + script identifier
-    if "BANNED_PATTERNS = [" in file_content and "Quality check script" in file_content:
-        return issues
-
-    # Tertiary check: pattern definitions + reasonable size
-    # If file has BANNED_PATTERNS and is reasonably small, it's likely this script
-    if "BANNED_PATTERNS = [" in file_content and len(lines) < _MAX_SCRIPT_SIZE_LINES:
         return issues
 
     # Skip if already excluded (check performed once in check_file)
@@ -298,19 +283,14 @@ def check_file(  # noqa: PLR0911
     # Also check if path contains 'scripts' and 'quality_check' to catch CI path variations
     filepath_str = str(filepath)
     filepath_lower = filepath_str.lower()
-    is_quality_check_script = (
-        filepath.name
-        in (
-            "quality_check.py",
-            "quality-check.py",
-            "quality_check_script.py",
-        )
-        or ("quality_check" in filepath_lower and filepath_lower.endswith(".py"))
-        or (
-            "scripts" in filepath_lower
-            and "quality_check" in filepath_lower
-            and filepath_lower.endswith(".py")
-        )
+    is_quality_check_script = filepath.name in (
+        "quality_check.py",
+        "quality-check.py",
+        "quality_check_script.py",
+    ) or (
+        "scripts" in filepath_lower
+        and "quality_check" in filepath_lower
+        and filepath_lower.endswith(".py")
     )
     if is_quality_check_script:
         return []
@@ -325,12 +305,9 @@ def check_file(  # noqa: PLR0911
         # Additional safety: check for unique marker or pattern definitions
         # This is the most reliable check - works regardless of path resolution
         # CRITICAL: This check MUST happen before reading lines to prevent any processing
-        if (
-            _QUALITY_CHECK_SCRIPT_MARKER in content
-            or ("BANNED_PATTERNS = [" in content and "Quality check script" in content)
-            or "BANNED_PATTERNS = ["
-            in content  # Most permissive - if it has patterns, exclude it
-        ):
+        # Most permissive check: if file contains BANNED_PATTERNS definition, it's this script
+        # This is the most reliable content-based check
+        if "BANNED_PATTERNS = [" in content or _QUALITY_CHECK_SCRIPT_MARKER in content:
             return []
 
         lines = content.splitlines()
@@ -454,7 +431,8 @@ def main() -> None:
     # Filter out the script itself - use hardcoded filename check FIRST for reliability
     # This works in all environments (local, CI, etc.) regardless of path resolution
     # CRITICAL: This MUST be the first filter to ensure the script is never processed
-    # Check filename, path string, and scripts/quality_check combination
+    # Only match exact filenames or scripts/quality_check.py path combination
+    # Do NOT use overly broad patterns that could exclude legitimate files
     python_files = [
         f
         for f in python_files
@@ -465,7 +443,6 @@ def main() -> None:
                 "quality-check.py",
                 "quality_check_script.py",
             )
-            or ("quality_check" in str(f).lower() and str(f).endswith(".py"))
             or (
                 "scripts" in str(f).lower()
                 and "quality_check" in str(f).lower()
