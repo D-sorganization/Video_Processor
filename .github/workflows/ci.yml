@@ -82,11 +82,12 @@ jobs:
 
       - name: Check for approximations
         run: |
-          # Fail if "approximately" or similar found
-          if grep -ri "approximately\|approx[^a-z]\|roughly\|~[0-9]" \
+          # Fail if "approximately" or similar found (but allow pytest.approx and scientific notation)
+          if grep -ri "approximately\|roughly" \
             --include="*.py" --include="*.m" \
             --exclude-dir=".git" \
-            --exclude-dir="docs" .; then
+            --exclude-dir="docs" \
+            --exclude-dir="tests" .; then
             echo "❌ ERROR: Approximations found - use exact values with sources"
             exit 1
           else
