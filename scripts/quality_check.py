@@ -235,7 +235,7 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
 
 def check_magic_numbers(
     lines: list[str],
-    filepath: Path,  # noqa: ARG001
+    filepath: Path,
     is_excluded: bool = False,  # noqa: FBT001, FBT002
 ) -> list[tuple[int, str, str]]:
     """Check for magic numbers in lines."""
@@ -333,7 +333,11 @@ def check_file(  # noqa: PLR0911
 
 
 # Module-level constant for excluded filenames
-_EXCLUDED_NAMES = {"quality_check_script.py", "quality_check.py", "matlab_quality_check.py"}
+_EXCLUDED_NAMES = {
+    "quality_check_script.py",
+    "quality_check.py",
+    "matlab_quality_check.py",
+}
 
 
 def _check_filename(filepath: Path) -> bool:
