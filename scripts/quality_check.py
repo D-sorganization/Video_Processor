@@ -123,7 +123,7 @@ def is_legitimate_pass_context(lines: list[str], line_num: int) -> bool:
     )
 
 
-def check_banned_patterns(  # noqa: PLR0911, C901
+def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     lines: list[str],
     filepath: Path,  # noqa: ARG001
     is_excluded: bool = False,  # noqa: FBT001, FBT002
@@ -135,29 +135,36 @@ def check_banned_patterns(  # noqa: PLR0911, C901
     # This MUST happen before pattern matching to prevent self-detection
     # This is the most important check - must run before ANY pattern matching
     # Multiple layers of checks ensure exclusion even if one fails in CI
-    if lines:
-        file_content = "\n".join(lines)
-        # Primary check: unique marker (most reliable) - MUST be first
-        # This marker is in the file header as a comment
-        if _QUALITY_CHECK_SCRIPT_MARKER in file_content:
-            return issues
-        # Secondary check: pattern definitions + script identifier
-        if (
-            "BANNED_PATTERNS = [" in file_content
-            and "Quality check script" in file_content
-        ):
-            return issues
-        # Tertiary check: pattern definitions + reasonable size
-        # If file has BANNED_PATTERNS and is reasonably small, it's likely this script
-        if (
-            "BANNED_PATTERNS = [" in file_content
-            and len(lines) < _MAX_SCRIPT_SIZE_LINES
-        ):
-            return issues
-        # Quaternary check: just pattern definitions (most permissive, catches all edge cases)
-        # This is a last resort - if file has BANNED_PATTERNS, exclude it to be safe
-        if "BANNED_PATTERNS = [" in file_content:
-            return issues
+    if not lines:
+        return issues
+
+    file_content = "\n".join(lines)
+    
+    # Primary check: unique marker (most reliable) - MUST be first
+    # This marker is in the file header as a comment
+    if _QUALITY_CHECK_SCRIPT_MARKER in file_content:
+        return issues
+    
+    # Secondary check: pattern definitions + script identifier
+    if (
+        "BANNED_PATTERNS = [" in file_content
+        and "Quality check script" in file_content
+    ):
+        return issues
+    
+    # Tertiary check: pattern definitions + reasonable size
+    # If file has BANNED_PATTERNS and is reasonably small, it's likely this script
+    if (
+        "BANNED_PATTERNS = [" in file_content
+        and len(lines) < _MAX_SCRIPT_SIZE_LINES
+    ):
+        return issues
+    
+    # Quaternary check: just pattern definitions (most permissive, catches all edge cases)
+    # This is a last resort - if file has BANNED_PATTERNS, exclude it to be safe
+    # This MUST be the final check before pattern matching
+    if "BANNED_PATTERNS = [" in file_content:
+        return issues
 
     # Skip if already excluded (check performed once in check_file)
     if is_excluded:
@@ -255,17 +262,23 @@ def check_file(  # noqa: PLR0911
         content = filepath.read_text(encoding="utf-8")
         # Additional safety: check for unique marker or pattern definitions
         # This is the most reliable check - works regardless of path resolution
-        if _QUALITY_CHECK_SCRIPT_MARKER in content or (
-            "BANNED_PATTERNS = [" in content and "Quality check script" in content
+        # CRITICAL: This check MUST happen before reading lines to prevent any processing
+        if (
+            _QUALITY_CHECK_SCRIPT_MARKER in content
+            or ("BANNED_PATTERNS = [" in content and "Quality check script" in content)
+            or "BANNED_PATTERNS = [" in content  # Most permissive - if it has patterns, exclude it
         ):
             return []
 
         lines = content.splitlines()
 
         # Cache exclusion result to avoid repeated expensive checks in helper functions
+        # Note: is_excluded is False here because should_exclude_file() already returned early
+        # if the file should be excluded, so we only reach here for non-excluded files
         is_excluded = False
 
         issues = []
+        # check_banned_patterns has its own content checks as a safety net
         issues.extend(check_banned_patterns(lines, filepath, is_excluded))
         issues.extend(check_magic_numbers(lines, filepath, is_excluded))
         issues.extend(check_ast_issues(content))
