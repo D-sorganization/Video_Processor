@@ -156,7 +156,12 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     # ABSOLUTE FIRST CONTENT CHECK: If file contains BANNED_PATTERNS definition, it's this script
     # This is the most reliable check - only this script contains BANNED_PATTERNS = [
     # MUST be checked FIRST before any other checks
+    # This check is CRITICAL - it must happen before any pattern matching
     if "BANNED_PATTERNS = [" in file_content:
+        return issues
+
+    # Additional safety: check for the marker in content
+    if _QUALITY_CHECK_SCRIPT_MARKER in file_content:
         return issues
 
     # Primary check: unique marker (most reliable) - MUST be second
