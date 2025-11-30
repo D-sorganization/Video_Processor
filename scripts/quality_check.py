@@ -1,10 +1,12 @@
 """Quality check script to verify AI-generated code meets standards."""  # noqa: INP001
+# QUALITY_CHECK_SCRIPT_V1 - Unique marker for script identification
+
+from __future__ import annotations
 
 import ast
 import re
 import sys
 from pathlib import Path
-from typing import Optional
 
 # Store the script's own path at module level for reliable exclusion
 # This MUST be set correctly for the exclusion to work
@@ -123,15 +125,12 @@ def check_banned_patterns(  # noqa: PLR0911
 ) -> list[tuple[int, str, str]]:
     """Check for banned patterns in lines."""
     issues: list[tuple[int, str, str]] = []
-    # Skip if already excluded (check performed once in check_file)
-    if is_excluded:
-        return issues
 
-    # Additional safety: check if this is the script by looking at content
-    # This catches cases where is_excluded wasn't set correctly
-    # Use unique marker for reliable identification
+    # CRITICAL: Check content FIRST before any processing
+    # This MUST happen before pattern matching to prevent self-detection
     if len(lines) > 0:
         file_content = "\n".join(lines)
+        # Primary check: unique marker (most reliable)
         if _QUALITY_CHECK_SCRIPT_MARKER in file_content:
             return issues
         # Fallback: check for pattern definitions
@@ -140,6 +139,10 @@ def check_banned_patterns(  # noqa: PLR0911
             and "Quality check script" in file_content
         ):
             return issues
+
+    # Skip if already excluded (check performed once in check_file)
+    if is_excluded:
+        return issues
 
     # Process lines and check for banned patterns
     for line_num, line in enumerate(lines, 1):
