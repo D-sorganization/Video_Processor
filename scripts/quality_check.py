@@ -279,12 +279,24 @@ def check_file(  # noqa: PLR0911
     """Check a Python file for quality issues."""
     # CRITICAL: Hardcoded filename/path check - ABSOLUTE FIRST check
     # This works in all environments and doesn't depend on path resolution
+    # Also check if path contains 'scripts' and 'quality_check' to catch CI path variations
     filepath_str = str(filepath)
-    if filepath.name in (
-        "quality_check.py",
-        "quality-check.py",
-        "quality_check_script.py",
-    ) or ("quality_check" in filepath_str.lower() and filepath_str.endswith(".py")):
+    filepath_lower = filepath_str.lower()
+    is_quality_check_script = (
+        filepath.name
+        in (
+            "quality_check.py",
+            "quality-check.py",
+            "quality_check_script.py",
+        )
+        or ("quality_check" in filepath_lower and filepath_lower.endswith(".py"))
+        or (
+            "scripts" in filepath_lower
+            and "quality_check" in filepath_lower
+            and filepath_lower.endswith(".py")
+        )
+    )
+    if is_quality_check_script:
         return []
 
     # CRITICAL: Check if this is the script itself - MUST happen SECOND
