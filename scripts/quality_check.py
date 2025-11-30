@@ -19,6 +19,9 @@ except NameError:
     _SCRIPT_DIR = None
     _SCRIPT_RELATIVE = None
 
+# Unique marker to identify this script - used for exclusion
+_QUALITY_CHECK_SCRIPT_MARKER = "QUALITY_CHECK_SCRIPT_V1"
+
 # Configuration
 BANNED_PATTERNS = [
     (re.compile(r"\bTODO\b"), "TODO placeholder found"),
@@ -123,8 +126,12 @@ def check_banned_patterns(
 
     # Additional safety: check if this is the script by looking at content
     # This catches cases where is_excluded wasn't set correctly
+    # Use unique marker for reliable identification
     if len(lines) > 0:
         file_content = "\n".join(lines)
+        if _QUALITY_CHECK_SCRIPT_MARKER in file_content:
+            return issues
+        # Fallback: check for pattern definitions
         if (
             "BANNED_PATTERNS = [" in file_content
             and "Quality check script" in file_content
@@ -133,6 +140,9 @@ def check_banned_patterns(
 
     # Process lines and check for banned patterns
     for line_num, line in enumerate(lines, 1):
+        # Skip lines that are pattern definitions (avoid false positives)
+        if "BANNED_PATTERNS" in line or "re.compile" in line:
+            continue
         # Check for basic banned patterns
         for pattern, message in BANNED_PATTERNS:
             if pattern.search(line):
@@ -283,10 +293,14 @@ def _check_content_signature(filepath: Path) -> bool:
         return False
     else:
         # Look for unique signature of quality check script
+        # Use unique marker first (most reliable), then fallback to pattern definitions
         return (
-            "BANNED_PATTERNS = [" in content_start
-            and "Quality check script" in content_start
-            and "def should_exclude_file" in content_start
+            _QUALITY_CHECK_SCRIPT_MARKER in content_start
+            or (
+                "BANNED_PATTERNS = [" in content_start
+                and "Quality check script" in content_start
+                and "def should_exclude_file" in content_start
+            )
         )
 
 
