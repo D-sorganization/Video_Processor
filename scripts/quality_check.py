@@ -18,7 +18,7 @@ try:
     _SCRIPT_NAME: str = Path(__file__).name
     _SCRIPT_DIR: Path | None = Path(__file__).parent.resolve()
     _SCRIPT_RELATIVE: Path | None = Path(
-        __file__
+        __file__,
     )  # Keep relative path too for CI compatibility
 except NameError:
     _SCRIPT_PATH = None
