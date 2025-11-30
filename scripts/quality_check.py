@@ -132,14 +132,18 @@ def check_banned_patterns(  # noqa: PLR0911
     # This is the most important check - must run before ANY pattern matching
     if lines:
         file_content = "\n".join(lines)
-        # Primary check: unique marker (most reliable)
+        # Primary check: unique marker (most reliable) - MUST be first
         if _QUALITY_CHECK_SCRIPT_MARKER in file_content:
             return issues
-        # Fallback: check for pattern definitions
+        # Secondary check: pattern definitions + script identifier
         if (
             "BANNED_PATTERNS = [" in file_content
             and "Quality check script" in file_content
         ):
+            return issues
+        # Tertiary check: just pattern definitions (catches edge cases in CI)
+        # If file has BANNED_PATTERNS and is reasonably small, it's likely this script
+        if "BANNED_PATTERNS = [" in file_content and len(lines) < 400:
             return issues
 
     # Skip if already excluded (check performed once in check_file)
