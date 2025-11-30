@@ -1,6 +1,7 @@
 """Quality check script to verify AI-generated code meets standards."""  # noqa: INP001
 
 # QUALITY_CHECK_SCRIPT_V1 - Unique marker for script identification
+# This marker MUST be present for the script to exclude itself from checks
 
 from __future__ import annotations
 
