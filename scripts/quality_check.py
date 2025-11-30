@@ -217,11 +217,10 @@ def check_file(  # noqa: PLR0911
 
     try:
         content = filepath.read_text(encoding="utf-8")
-        # Additional safety check: if content contains unique marker or pattern definitions, it's this script
+        # Additional safety: check for unique marker or pattern definitions
         # This is the most reliable check - works regardless of path resolution
-        if (
-            _QUALITY_CHECK_SCRIPT_MARKER in content
-            or ("BANNED_PATTERNS = [" in content and "Quality check script" in content)
+        if _QUALITY_CHECK_SCRIPT_MARKER in content or (
+            "BANNED_PATTERNS = [" in content and "Quality check script" in content
         ):
             return []
 
@@ -297,13 +296,10 @@ def _check_content_signature(filepath: Path) -> bool:
     else:
         # Look for unique signature of quality check script
         # Use unique marker first (most reliable), then fallback to pattern definitions
-        return (
-            _QUALITY_CHECK_SCRIPT_MARKER in content_start
-            or (
-                "BANNED_PATTERNS = [" in content_start
-                and "Quality check script" in content_start
-                and "def should_exclude_file" in content_start
-            )
+        return _QUALITY_CHECK_SCRIPT_MARKER in content_start or (
+            "BANNED_PATTERNS = [" in content_start
+            and "Quality check script" in content_start
+            and "def should_exclude_file" in content_start
         )
 
 
