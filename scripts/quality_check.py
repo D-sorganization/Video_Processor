@@ -136,24 +136,40 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     # This is the most reliable check that works in all environments (local, CI, etc.)
     # Check filename AND path string to catch all variations
     # Also check if path contains 'scripts' and 'quality_check' to catch CI path variations
+    # Also check against __file__ if available for absolute certainty
     filepath_str = str(filepath)
     filepath_lower = filepath_str.lower()
-    is_quality_check_script = (
-        filepath.name
-        in (
-            "quality_check.py",
-            "quality-check.py",
-            "quality_check_script.py",
-        )
-        or ("quality_check" in filepath_lower and filepath_lower.endswith(".py"))
-        or (
-            "scripts" in filepath_lower
-            and "quality_check" in filepath_lower
-            and filepath_lower.endswith(".py")
-        )
-    )
-    if is_quality_check_script:
+    
+    # Check 1: Exact filename match
+    if filepath.name in (
+        "quality_check.py",
+        "quality-check.py",
+        "quality_check_script.py",
+    ):
         return issues
+    
+    # Check 2: quality_check in path + ends with .py
+    if "quality_check" in filepath_lower and filepath_lower.endswith(".py"):
+        return issues
+    
+    # Check 3: scripts + quality_check in path + ends with .py
+    if (
+        "scripts" in filepath_lower
+        and "quality_check" in filepath_lower
+        and filepath_lower.endswith(".py")
+    ):
+        return issues
+    
+    # Check 4: Compare against __file__ if available (most reliable)
+    if _SCRIPT_PATH is not None:
+        try:
+            filepath_resolved = filepath.resolve()
+            if filepath_resolved == _SCRIPT_PATH:
+                return issues
+            if filepath_resolved.samefile(_SCRIPT_PATH):
+                return issues
+        except (OSError, ValueError):
+            pass
 
     # CRITICAL: Check content FIRST before any processing
     # This MUST happen before pattern matching to prevent self-detection
