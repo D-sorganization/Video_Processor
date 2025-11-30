@@ -135,12 +135,24 @@ def check_banned_patterns(  # noqa: PLR0911, C901, PLR0912
     # CRITICAL: Hardcoded filename/path check - ABSOLUTE FIRST check before ANY processing
     # This is the most reliable check that works in all environments (local, CI, etc.)
     # Check filename AND path string to catch all variations
+    # Also check if path contains 'scripts' and 'quality_check' to catch CI path variations
     filepath_str = str(filepath)
-    if filepath.name in (
-        "quality_check.py",
-        "quality-check.py",
-        "quality_check_script.py",
-    ) or ("quality_check" in filepath_str.lower() and filepath_str.endswith(".py")):
+    filepath_lower = filepath_str.lower()
+    is_quality_check_script = (
+        filepath.name
+        in (
+            "quality_check.py",
+            "quality-check.py",
+            "quality_check_script.py",
+        )
+        or ("quality_check" in filepath_lower and filepath_lower.endswith(".py"))
+        or (
+            "scripts" in filepath_lower
+            and "quality_check" in filepath_lower
+            and filepath_lower.endswith(".py")
+        )
+    )
+    if is_quality_check_script:
         return issues
 
     # CRITICAL: Check content FIRST before any processing
