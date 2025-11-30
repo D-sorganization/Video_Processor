@@ -45,8 +45,8 @@ jobs:
       - name: Check for placeholders
         run: |
           # Fail if TODO, FIXME, or other placeholders found in Python files
-          # Use find to get all Python files, then exclude quality_check.py specifically
-          if find . -name "*.py" -type f \
+          # Use find to locate files and exclude quality_check.py, then check for placeholders
+          placeholder_files=$(find . -name "*.py" -type f \
             -not -path "./.git/*" \
             -not -path "./archive/*" \
             -not -path "./legacy/*" \
@@ -56,8 +56,12 @@ jobs:
             -not -path "./.mypy_cache/*" \
             -not -path "./scripts/quality_check.py" \
             -not -path "./scripts/quality-check.py" \
-            -exec grep -l "TODO\|FIXME\|XXX\|HACK\|pass #\|\.\.\..*#\|NotImplementedError" {} \; | grep -q .; then
+            -exec grep -l "TODO\|FIXME\|XXX\|HACK\|pass #\|\.\.\..*#\|NotImplementedError" {} \;)
+
+          if [ -n "$placeholder_files" ]; then
             echo "❌ ERROR: Placeholders found in code"
+            echo "Files containing placeholders:"
+            echo "$placeholder_files"
             exit 1
           else
             echo "✅ No placeholders found"
