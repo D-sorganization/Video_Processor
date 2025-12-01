@@ -472,7 +472,7 @@ class MATLABQualityChecker:
         return self.results
 
 
-def main():
+def main() -> None:  # noqa: PLR0915
     """Main entry point for the MATLAB quality check script."""
     parser = argparse.ArgumentParser(description="MATLAB Code Quality Checker")
     parser.add_argument("--strict", action="store_true", help="Enable strict mode")
@@ -494,7 +494,7 @@ def main():
     # Get project root
     project_root = Path(args.project_root).resolve()
     if not project_root.exists():
-        logger.error(f"Project root does not exist: {project_root}")
+        logger.error("Project root does not exist: %s", project_root)
         sys.exit(1)
 
     # Initialize and run quality checks
@@ -510,7 +510,7 @@ def main():
         print("=" * 60)  # noqa: T201
         print(f"Timestamp: {results.get('timestamp', 'N/A')}")  # noqa: T201
         print(f"Total Files: {results.get('total_files', 0)}")  # noqa: T201
-        print(
+        print(  # noqa: T201
             f"Status: {'PASSED' if results.get('passed', False) else 'FAILED'}",
         )
         print(f"Summary: {results.get('summary', 'N/A')}")  # noqa: T201
@@ -524,16 +524,14 @@ def main():
 
     # Exit with appropriate code
     # In strict mode, fail if any issues are found; otherwise fail only if checks didn't pass
-    passed = results.get("passed", False)
+    passed = bool(results.get("passed", False))
     has_issues = bool(results.get("issues"))
 
-    if args.strict:
-        # Strict mode: fail if any issues found
-        exit_code = 0 if (passed and not has_issues) else 1
-    else:
-        # Normal mode: fail only if checks didn't pass
-        exit_code = 0 if passed else 1
-
+    exit_code = (
+        (0 if (passed and not has_issues) else 1)
+        if args.strict
+        else (0 if passed else 1)
+    )
     sys.exit(exit_code)
 
 
