@@ -35,6 +35,17 @@ exclude = [
     "S101",
     "PLR2004", 
 ]
+# MATLAB quality check script - utility script with acceptable complexity
+"tools/matlab_utilities/scripts/matlab_quality_check.py" = [
+    "C901",      # Complexity acceptable for utility script
+    "PLR0912",   # Too many branches acceptable for utility script
+    "PLR0915",   # Too many statements acceptable for utility script
+    "PLR0911",   # Too many return statements acceptable
+    "BLE001",    # Blind exception catching acceptable for file parsing
+    "S603",      # Subprocess call is safe (internal script)
+    "DTZ005",    # Timezone not needed for timestamps
+    "ANN204",    # __init__ return type not needed
+]
 
 [lint.mccabe]
 max-complexity = 10
