@@ -19,11 +19,12 @@ import logging
 import re
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Final
 
 # Constants
-MATLAB_SCRIPT_TIMEOUT_SECONDS: int = 300  # 5 minutes - allows time for large codebases
+MATLAB_SCRIPT_TIMEOUT_SECONDS: Final[int] = 300  # [s] Timeout for MATLAB script execution - 5 minutes allows for large codebase analysis
 
 # Set up logging
 logging.basicConfig(
@@ -45,7 +46,7 @@ class MATLABQualityChecker:
         self.project_root = project_root
         self.matlab_dir = project_root / "matlab"
         self.results = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "total_files": 0,
             "issues": [],
             "passed": True,
@@ -271,7 +272,7 @@ class MATLABQualityChecker:
                         # Skip comment lines
                         if line_check.startswith("%"):
                             continue
-                        if re.search(r"\barguments\b", line_check):
+                        if re.match(r"arguments\b", line_check):
                             has_arguments = True
                             break
 
@@ -476,9 +477,11 @@ class MATLABQualityChecker:
             self.results["summary"] = (
                 f"MATLAB quality checks failed: {matlab_results['error']}"
             )
-            self.results["checks"]["matlab"] = matlab_results
+            # Type ignore: dict[str, object] allows string keys with object values
+            self.results["checks"]["matlab"] = matlab_results  # type: ignore[index]
         else:
-            self.results["checks"]["matlab"] = matlab_results
+            # Type ignore: dict[str, object] allows string keys with object values
+            self.results["checks"]["matlab"] = matlab_results  # type: ignore[index]
             if matlab_results.get("passed", False):
                 self.results["summary"] = (
                     f"[PASS] MATLAB quality checks PASSED "
@@ -537,9 +540,11 @@ def main() -> None:
         )
         print(f"Summary: {results.get('summary', 'N/A')}")  # noqa: T201
 
-        if results.get("issues"):
-            print(f"\nIssues Found ({len(results['issues'])}):")  # noqa: T201
-            for i, issue in enumerate(results["issues"], 1):
+        issues_raw = results.get("issues", [])
+        issues: list[str] = issues_raw if isinstance(issues_raw, list) else []
+        if issues:
+            print(f"\nIssues Found ({len(issues)}):")  # noqa: T201
+            for i, issue in enumerate(issues, 1):
                 print(f"  {i}. {issue}")  # noqa: T201
 
         print("\n" + "=" * 60)  # noqa: T201
