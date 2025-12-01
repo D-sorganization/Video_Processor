@@ -256,7 +256,10 @@ class MATLABQualityChecker:
                         if next_line and not next_line.startswith("%"):
                             break
                         min_comment_length = 3
-                        if next_line.startswith("%") and len(next_line) > min_comment_length:
+                        if (
+                            next_line.startswith("%")
+                            and len(next_line) > min_comment_length
+                        ):
                             has_docstring = True
                             break
 
@@ -414,7 +417,9 @@ class MATLABQualityChecker:
                     # Check for clear without variable (dangerous) or clear all/global
                     # (very dangerous)
                     if re.search(
-                        r"\bclear\s+(all|global)\b", line_stripped, re.IGNORECASE,
+                        r"\bclear\s+(all|global)\b",
+                        line_stripped,
+                        re.IGNORECASE,
                     ):
                         issues.append(
                             f"{file_path.name} (line {i}): Avoid 'clear all' or "
@@ -565,4 +570,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
