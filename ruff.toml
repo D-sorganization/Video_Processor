@@ -45,6 +45,7 @@ exclude = [
     "S603",      # Subprocess call is safe (internal script)
     "DTZ005",    # Timezone not needed for timestamps
     "ANN204",    # __init__ return type not needed
+    "ICN003",    # Final from typing needed for proper type annotations
 ]
 
 [lint.mccabe]

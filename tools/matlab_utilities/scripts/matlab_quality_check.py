@@ -19,12 +19,13 @@ import logging
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
 # Constants
-MATLAB_SCRIPT_TIMEOUT_SECONDS: Final[int] = 300  # [s] Timeout for MATLAB script execution - 5 minutes allows for large codebase analysis
+# [s] Timeout for MATLAB script execution - 5 minutes allows for large codebase analysis
+MATLAB_SCRIPT_TIMEOUT_SECONDS: Final[int] = 300
 
 # Set up logging
 logging.basicConfig(
@@ -46,7 +47,7 @@ class MATLABQualityChecker:
         self.project_root = project_root
         self.matlab_dir = project_root / "matlab"
         self.results = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "total_files": 0,
             "issues": [],
             "passed": True,
