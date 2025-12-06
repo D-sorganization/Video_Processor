@@ -6,6 +6,7 @@
 
 import { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
+import { vi, beforeEach, afterEach } from 'vitest';
 
 /**
  * Custom render function that wraps components with providers

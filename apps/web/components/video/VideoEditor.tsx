@@ -31,7 +31,7 @@ export default function VideoEditor({
 }: VideoEditorProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [trimRange, setTrimRange] = useState<TrimRange>({ start: 0, end: 0 });
-  const [cropArea, setCropArea] = useState<CropArea | null>(null);
+  const [cropArea, _setCropArea] = useState<CropArea | null>(null);
   const [rotation, setRotation] = useState<RotationAngle>(0);
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const ffmpegRef = useRef<FFmpeg | null>(null);
@@ -40,11 +40,11 @@ export default function VideoEditor({
   const loadFFmpeg = async () => {
     if (ffmpegRef.current) return;
 
-    const { createFFmpeg } = await import('@ffmpeg/ffmpeg');
     const ffmpeg = new FFmpeg();
     ffmpegRef.current = ffmpeg;
 
     ffmpeg.on('log', ({ message }) => {
+      // eslint-disable-next-line no-console
       console.log(message);
     });
 
@@ -118,7 +118,7 @@ export default function VideoEditor({
       await ffmpeg.exec(outputArgs);
 
       const data = await ffmpeg.readFile('output.mp4');
-      const blob = new Blob([data], { type: 'video/mp4' });
+      const blob = new Blob([data as any], { type: 'video/mp4' });
 
       await ffmpeg.deleteFile('input.mp4');
       await ffmpeg.deleteFile('output.mp4');

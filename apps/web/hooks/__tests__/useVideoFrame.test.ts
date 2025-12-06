@@ -4,7 +4,7 @@
  * Tests frame navigation functionality for video playback.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useVideoFrame } from '../useVideoFrame';
 import { createMockVideoElement } from '@/test/utils';

@@ -9,13 +9,6 @@ interface PoseDetectorProps {
   disabled?: boolean;
 }
 
-interface PoseLandmark {
-  x: number;
-  y: number;
-  z: number;
-  visibility?: number;
-}
-
 export default function PoseDetector({
   videoElement,
   enabled,
