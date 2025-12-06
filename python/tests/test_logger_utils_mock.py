@@ -16,7 +16,7 @@ def test_torch_available_seeds() -> None:
     # Patch sys.modules to include torch
     with patch.dict(sys.modules, {"torch": mock_torch}):
         # Import (or reload) logger_utils to trigger torch import detection
-        import src.logger_utils  # noqa: PLC0415
+        import src.logger_utils
 
         importlib.reload(src.logger_utils)
 

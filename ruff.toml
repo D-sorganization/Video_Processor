@@ -35,6 +35,11 @@ exclude = [
     "S101",
     "PLR2004", 
 ]
+"python/tests/test_logger_utils_mock.py" = [
+    "S101",
+    "PLR2004",
+    "PLC0415",
+]
 # MATLAB quality check script - utility script with acceptable complexity
 "tools/matlab_utilities/scripts/matlab_quality_check.py" = [
     "C901",      # Complexity acceptable for utility script
