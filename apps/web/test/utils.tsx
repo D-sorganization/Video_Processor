@@ -28,7 +28,15 @@ export function createMockFile(
   type: string = 'video/mp4'
 ): File {
   const blob = new Blob(['mock video content'], { type });
-  return new File([blob], name, { type });
+  const file = new File([blob], name, { type });
+
+  // Override the size property
+  Object.defineProperty(file, 'size', {
+    value: size,
+    configurable: true,
+  });
+
+  return file;
 }
 
 /**

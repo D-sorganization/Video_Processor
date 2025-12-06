@@ -19,11 +19,11 @@ export function useVideoFrame({ videoElement, fps = 30 }: UseVideoFrameOptions) 
 
   const getCurrentFrame = useCallback((): number => {
     if (!videoElement) return 0;
-    return Math.floor(videoElement.currentTime * fps);
+    return Math.max(0, Math.floor(videoElement.currentTime * fps));
   }, [videoElement, fps]);
 
   const getTotalFrames = useCallback((): number => {
-    if (!videoElement) return 0;
+    if (!videoElement || !Number.isFinite(videoElement.duration)) return 0;
     return Math.floor(videoElement.duration * fps);
   }, [videoElement, fps]);
 

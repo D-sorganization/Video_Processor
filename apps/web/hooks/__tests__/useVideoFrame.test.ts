@@ -266,6 +266,17 @@ describe('useVideoFrame', () => {
         videoHeight: 1080,
       }) as HTMLVideoElement;
 
+      // Mock canvas to return null context to avoid hanging on seeked event
+      const originalCreateElement = document.createElement;
+      vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+        if (tagName === 'canvas') {
+          return {
+            getContext: () => null,
+          } as any;
+        }
+        return originalCreateElement.call(document, tagName);
+      });
+
       const { result } = renderHook(() =>
         useVideoFrame({ videoElement: mockVideo, fps: 30 })
       );
@@ -274,6 +285,8 @@ describe('useVideoFrame', () => {
       // but verifies the function runs without errors
       const blob = await result.current.extractFrame();
       expect(blob).toBeNull();
+
+      vi.restoreAllMocks();
     });
   });
 });

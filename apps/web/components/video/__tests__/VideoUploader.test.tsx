@@ -47,7 +47,7 @@ describe('VideoUploader', () => {
 
       const input = container.querySelector('input[type="file"]');
       expect(input).toBeInTheDocument();
-      expect(input).toHaveClass('hidden');
+      expect(input).toHaveClass('sr-only');
       expect(input).toHaveAttribute('accept', 'video/*');
     });
 
@@ -133,7 +133,8 @@ describe('VideoUploader', () => {
 
       const file = createMockFile('test.jpg', 1 * 1024 * 1024, 'image/jpeg');
 
-      await userEvent.upload(input, file);
+      const user = userEvent.setup({ applyAccept: false });
+      await user.upload(input, file);
 
       expect(onVideoUpload).not.toHaveBeenCalled();
       expect(screen.getByText(/File type not supported/i)).toBeInTheDocument();
@@ -145,7 +146,8 @@ describe('VideoUploader', () => {
 
       const file = createMockFile('test.pdf', 1 * 1024 * 1024, 'application/pdf');
 
-      await userEvent.upload(input, file);
+      const user = userEvent.setup({ applyAccept: false });
+      await user.upload(input, file);
 
       expect(onVideoUpload).not.toHaveBeenCalled();
       expect(screen.getByText(/File type not supported/i)).toBeInTheDocument();
@@ -161,7 +163,7 @@ describe('VideoUploader', () => {
 
       expect(onVideoUpload).not.toHaveBeenCalled();
       expect(screen.getByText(/File size too large/i)).toBeInTheDocument();
-      expect(screen.getByText(/Maximum size: 500MB/i)).toBeInTheDocument();
+      expect(screen.getByText(/Maximum size: 500\.00 MB/i)).toBeInTheDocument();
     });
 
     it('should accept file exactly at 500MB limit', async () => {
@@ -359,7 +361,8 @@ describe('VideoUploader', () => {
 
       const file = createMockFile('test.jpg', 1 * 1024 * 1024, 'image/jpeg');
 
-      await userEvent.upload(input, file);
+      const user = userEvent.setup({ applyAccept: false });
+      await user.upload(input, file);
 
       const errorElement = screen.getByText(/File type not supported/i);
       expect(errorElement).toBeInTheDocument();
@@ -373,7 +376,8 @@ describe('VideoUploader', () => {
 
       const file = createMockFile('test.jpg', 1 * 1024 * 1024, 'image/jpeg');
 
-      await userEvent.upload(input, file);
+      const user = userEvent.setup({ applyAccept: false });
+      await user.upload(input, file);
 
       expect(dropArea.className).toContain('border-red-300');
       expect(dropArea.className).toContain('bg-red-50');
@@ -385,7 +389,8 @@ describe('VideoUploader', () => {
 
       // First, upload invalid file
       const invalidFile = createMockFile('test.jpg', 1 * 1024 * 1024, 'image/jpeg');
-      await userEvent.upload(input, invalidFile);
+      const user = userEvent.setup({ applyAccept: false });
+      await user.upload(input, invalidFile);
 
       expect(screen.getByText(/File type not supported/i)).toBeInTheDocument();
 
@@ -406,7 +411,7 @@ describe('VideoUploader', () => {
       await userEvent.upload(input, file);
 
       expect(screen.getByText(/File size too large/i)).toBeInTheDocument();
-      expect(screen.getByText(/Maximum size: 500MB/i)).toBeInTheDocument();
+      expect(screen.getByText(/Maximum size: 500\.00 MB/i)).toBeInTheDocument();
     });
   });
 

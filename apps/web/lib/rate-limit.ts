@@ -12,7 +12,7 @@ interface RateLimitEntry {
   resetAt: number;
 }
 
-class RateLimiter {
+export class RateLimiter {
   private store: Map<string, RateLimitEntry> = new Map();
   private cleanupInterval: NodeJS.Timeout | null = null;
 
