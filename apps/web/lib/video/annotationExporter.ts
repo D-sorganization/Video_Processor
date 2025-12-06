@@ -73,7 +73,7 @@ export function importAnnotationsFromJSON(
           canvas.add(obj);
         });
         canvas.renderAll();
-      }, "");
+      });
     } catch (error) {
       console.error(`Failed to import annotation ${annotation.id}:`, error);
     }
