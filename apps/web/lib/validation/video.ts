@@ -67,13 +67,44 @@ const MAGIC_BYTES: Record<string, Uint8Array[]> = {
 };
 
 // ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Get human-readable file size
+ */
+export function formatFileSize(bytes: number): string {
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let size = bytes;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex++;
+  }
+
+  return `${size.toFixed(2)} ${units[unitIndex]}`;
+}
+
+/**
+ * Get max file size in human-readable format
+ */
+export function getMaxFileSize(): string {
+  return formatFileSize(MAX_FILE_SIZE);
+}
+
+// ============================================================================
 // Schemas
 // ============================================================================
 
 const VideoFileSchema = z.object({
-  name: z.string().min(1).max(255),
-  size: z.number().int().min(1).max(MAX_FILE_SIZE), // Explicitly reject zero-byte files
-  type: z.enum(ALLOWED_MIME_TYPES as any), // Type assertion needed for Zod
+  name: z.string().min(1, "File name is required").max(255, "File name is too long"),
+  size: z.number().int()
+    .min(1, "File is empty")
+    .max(MAX_FILE_SIZE, `File size too large. Maximum size: ${getMaxFileSize()}`),
+  type: z.enum(ALLOWED_MIME_TYPES as any, {
+    errorMap: () => ({ message: "File type not supported" })
+  }),
 });
 
 // ============================================================================
@@ -249,29 +280,6 @@ export async function validateVideoFile(file: File): Promise<void> {
  */
 export function quickValidateVideoFile(file: File): void {
   validateVideoMetadata(file);
-}
-
-/**
- * Get human-readable file size
- */
-export function formatFileSize(bytes: number): string {
-  const units = ['B', 'KB', 'MB', 'GB'];
-  let size = bytes;
-  let unitIndex = 0;
-
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex++;
-  }
-
-  return `${size.toFixed(2)} ${units[unitIndex]}`;
-}
-
-/**
- * Get max file size in human-readable format
- */
-export function getMaxFileSize(): string {
-  return formatFileSize(MAX_FILE_SIZE);
 }
 
 /**

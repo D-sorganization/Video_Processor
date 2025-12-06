@@ -50,7 +50,7 @@ export default function AudioRecorder({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
       setHasPermission(true);
-    } catch (error) {
+    } catch {
       setHasPermission(false);
     }
   };
@@ -60,7 +60,7 @@ export default function AudioRecorder({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
       setHasPermission(true);
-    } catch (error) {
+    } catch {
       setHasPermission(false);
     }
   };
@@ -102,7 +102,7 @@ export default function AudioRecorder({
       setIsRecording(true);
       setIsPaused(false);
       setRecordingTime(0);
-    } catch (error) {
+    } catch {
       setHasPermission(false);
     }
   };

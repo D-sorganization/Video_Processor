@@ -96,7 +96,8 @@ export default function VideoUploader({ onVideoUpload }: VideoUploaderProps) {
           type="file"
           accept="video/*"
           onChange={handleFileInputChange}
-          className="hidden"
+          className="sr-only"
+          aria-label="Drop your video here, or click to browse"
         />
 
         <div className="flex flex-col items-center justify-center space-y-4">

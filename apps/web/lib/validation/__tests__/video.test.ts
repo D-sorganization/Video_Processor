@@ -128,6 +128,8 @@ describe('Video Validation', () => {
     it('should be case-sensitive', () => {
       // MIME types should be lowercase
       const file = createMockFile('test.mp4', 1024, 'VIDEO/MP4' as any);
+      // Force type to be uppercase (File constructor normalizes to lowercase)
+      Object.defineProperty(file, 'type', { value: 'VIDEO/MP4' });
       expect(isFileTypeAllowed(file)).toBe(false);
     });
   });

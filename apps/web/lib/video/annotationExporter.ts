@@ -57,8 +57,8 @@ export function importAnnotationsFromJSON(
 
   exportData.annotations.forEach((annotation) => {
     try {
-      const obj = fabric.util.enlivenObjects([annotation.data], (objects) => {
-        objects.forEach((obj) => {
+      fabric.util.enlivenObjects([annotation.data], (objects: fabric.Object[]) => {
+        objects.forEach((obj: fabric.Object) => {
           if (annotation.style) {
             if (annotation.style.stroke) {
               (obj as fabric.Object & { stroke?: string }).stroke = annotation.style.stroke as string;

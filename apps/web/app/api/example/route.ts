@@ -27,7 +27,7 @@ const RequestSchema = z.object({
  * GET /api/example
  * No rate limiting or CSRF required for GET requests
  */
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     logger.info('GET /api/example');
 
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
  * OPTIONS /api/example
  * Handle CORS preflight requests
  */
-export async function OPTIONS(request: Request) {
+export async function OPTIONS(_request: Request) {
   return new NextResponse(null, {
     status: 200,
     headers: {
