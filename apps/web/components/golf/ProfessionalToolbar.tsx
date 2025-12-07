@@ -1,7 +1,6 @@
 'use client';
 
-import { DrawingTool } from '@/components/video/EditorCanvas';
-import { MeasurementType } from '@/components/golf/MeasurementTools';
+
 
 interface ProfessionalToolbarProps {
   currentTool: string;
@@ -64,10 +63,9 @@ export default function ProfessionalToolbar({
               className={`
                 relative group p-3 rounded-lg font-medium text-sm
                 transition-all duration-200
-                ${
-                  currentTool === tool.id
-                    ? 'bg-primary text-primary-foreground shadow-lg scale-105'
-                    : 'card-glass hover:scale-105'
+                ${currentTool === tool.id
+                  ? 'bg-primary text-primary-foreground shadow-lg scale-105'
+                  : 'card-glass hover:scale-105'
                 }
                 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
@@ -97,10 +95,9 @@ export default function ProfessionalToolbar({
               disabled={disabled}
               className={`
                 w-full aspect-square rounded-lg border-2 transition-all duration-200
-                ${
-                  currentColor === color.value
-                    ? 'border-primary scale-110 shadow-lg'
-                    : 'border-border hover:scale-105'
+                ${currentColor === color.value
+                  ? 'border-primary scale-110 shadow-lg'
+                  : 'border-border hover:scale-105'
                 }
                 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}

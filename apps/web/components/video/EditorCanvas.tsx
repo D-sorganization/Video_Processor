@@ -25,7 +25,7 @@ export interface EditorCanvasHandle {
 }
 
 const EditorCanvas = forwardRef<EditorCanvasHandle, EditorCanvasProps>(
-  ({ videoElement, currentTime, onAnnotationChange }, ref) => {
+  ({ videoElement, onAnnotationChange }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
     const [currentTool, setCurrentTool] = useState<DrawingTool>('select');

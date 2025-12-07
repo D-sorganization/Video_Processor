@@ -28,7 +28,7 @@ export default function HomePage() {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [totalFrames, setTotalFrames] = useState(0);
   const [poseDetectionEnabled, setPoseDetectionEnabled] = useState(false);
-  const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
+  const [fabricCanvas, _setFabricCanvas] = useState<fabric.Canvas | null>(null);
   const canvasRef = useRef<EditorCanvasHandle>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
