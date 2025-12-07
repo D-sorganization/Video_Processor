@@ -30,7 +30,7 @@ export default function HomePage() {
   const [poseDetectionEnabled, setPoseDetectionEnabled] = useState(false);
   const [fabricCanvas, _setFabricCanvas] = useState<fabric.Canvas | null>(null);
   const canvasRef = useRef<EditorCanvasHandle>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioUrlsRef = useRef<string[]>([]);
 
 
@@ -110,9 +110,7 @@ export default function HomePage() {
       }
 
       const audioUrl = URL.createObjectURL(audioBlob);
-
-      // Revoke the URL immediately as we only use it for logging here
-      URL.revokeObjectURL(audioUrl);
+      audioUrlsRef.current.push(audioUrl);
 
       logger.info('Audio recorded successfully', {
         audioUrl,

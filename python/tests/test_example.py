@@ -46,8 +46,8 @@ class TestConstants:
         angle_rad = angle_deg * constants.DEG_TO_RAD
         angle_deg_back = angle_rad * constants.RAD_TO_DEG
 
-        assert angle_rad == math.pi
-        assert angle_deg_back == 180.0
+        assert math.isclose(angle_rad, math.pi)
+        assert math.isclose(angle_deg_back, 180.0)
 
     def test_material_properties_positive(self) -> None:
         """Test material densities are positive."""
