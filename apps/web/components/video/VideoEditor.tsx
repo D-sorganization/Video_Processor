@@ -1,6 +1,6 @@
 'use client';
 
-import { FFmpeg } from '@ffmpeg/ffmpeg';
+import type { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import { useRef, useState } from 'react';
 
@@ -40,8 +40,8 @@ export default function VideoEditor({
   const loadFFmpeg = async () => {
     if (ffmpegRef.current) return;
 
-    await import('@ffmpeg/ffmpeg');
-    const ffmpeg = new FFmpeg();
+    const { FFmpeg: DynamicFFmpeg } = await import('@ffmpeg/ffmpeg');
+    const ffmpeg = new DynamicFFmpeg();
     ffmpegRef.current = ffmpeg;
 
     ffmpeg.on('log', ({ message }) => {

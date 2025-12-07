@@ -8,10 +8,10 @@ from pathlib import Path
 
 # Configuration
 BANNED_PATTERNS = [
-    (re.compile(r"\b" + "TO" + "DO" + r"\b"), "TO" + "DO placeholder found"),
-    (re.compile(r"\b" + "FIX" + "ME" + r"\b"), "FIX" + "ME placeholder found"),
+    (re.compile(r"\bTODO\b"), "TODO placeholder found"),
+    (re.compile(r"\bFIXME\b"), "FIXME placeholder found"),
     (re.compile(r"^\s*\.\.\.\s*$"), "Ellipsis placeholder"),
-    (re.compile("NotImplemented" + "Error"), "NotImplemented" + "Error placeholder"),
+    (re.compile("NotImplementedError"), "NotImplementedError placeholder"),
     (re.compile(r"<.*>"), "Angle bracket placeholder"),
     (re.compile(r"your.*here", re.IGNORECASE), "Template placeholder"),
     (re.compile(r"insert.*here", re.IGNORECASE), "Template placeholder"),
@@ -200,6 +200,7 @@ def main() -> None:
         "output",
         ".ipynb_checkpoints",  # Add checkpoint files to exclusion
         ".Trash",  # Add trash files to exclusion
+        "node_modules",
     }
     python_files = [f for f in python_files if not any(part in exclude_dirs for part in f.parts)]
 

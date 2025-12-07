@@ -31,6 +31,8 @@ export default function HomePage() {
   const [fabricCanvas, _setFabricCanvas] = useState<fabric.Canvas | null>(null);
   const canvasRef = useRef<EditorCanvasHandle>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioUrlsRef = useRef<string[]>([]);
+
 
   // Note: config is not imported here to avoid client-side issues
   const DEFAULT_FPS = 30; // Could be from process.env.NEXT_PUBLIC_DEFAULT_VIDEO_FPS
@@ -109,6 +111,9 @@ export default function HomePage() {
 
       const audioUrl = URL.createObjectURL(audioBlob);
 
+      // Revoke the URL immediately as we only use it for logging here
+      URL.revokeObjectURL(audioUrl);
+
       logger.info('Audio recorded successfully', {
         audioUrl,
         startTime,
@@ -175,6 +180,13 @@ export default function HomePage() {
       }
     };
   }, [videoUrl]);
+
+  useEffect(() => {
+    return () => {
+      audioUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      audioUrlsRef.current = [];
+    };
+  }, []);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -267,7 +279,6 @@ export default function HomePage() {
                     <EditorCanvas
                       ref={canvasRef}
                       videoElement={videoElement}
-                      currentTime={currentTime}
                       onAnnotationChange={handleAnnotationChange}
                     />
                     {poseDetectionEnabled && (

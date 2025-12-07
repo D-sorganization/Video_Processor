@@ -5,7 +5,6 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 
 interface EditorCanvasProps {
   videoElement: HTMLVideoElement | null;
-  currentTime: number;
   onAnnotationChange?: (annotations: fabric.Object[]) => void;
 }
 
