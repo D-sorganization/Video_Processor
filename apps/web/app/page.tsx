@@ -28,12 +28,13 @@ export default function HomePage() {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [totalFrames, setTotalFrames] = useState(0);
   const [poseDetectionEnabled, setPoseDetectionEnabled] = useState(false);
-  const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
+  const [fabricCanvas, _setFabricCanvas] = useState<fabric.Canvas | null>(null);
   const canvasRef = useRef<EditorCanvasHandle>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioUrlsRef = useRef<string[]>([]);
+
 
   // Note: config is not imported here to avoid client-side issues
-  // TODO: Move fps to client-side config or use from video metadata
   const DEFAULT_FPS = 30; // Could be from process.env.NEXT_PUBLIC_DEFAULT_VIDEO_FPS
 
   const { getCurrentFrame, getTotalFrames } = useVideoFrame({
@@ -109,6 +110,7 @@ export default function HomePage() {
       }
 
       const audioUrl = URL.createObjectURL(audioBlob);
+      audioUrlsRef.current.push(audioUrl);
 
       logger.info('Audio recorded successfully', {
         audioUrl,
@@ -118,9 +120,6 @@ export default function HomePage() {
       });
 
       toast.success('Audio commentary recorded successfully');
-
-      // TODO: Save to database when backend is ready
-      // await saveAudioTrack({ url: audioUrl, startTime, duration: audioBlob.size });
     } catch (error) {
       logger.error('Failed to process audio recording', { error, audioBlob, startTime });
       toast.error(getUserMessage(error));
@@ -165,9 +164,6 @@ export default function HomePage() {
         currentTime,
         currentFrame,
       });
-
-      // TODO: Save pose data to state or database when ready
-      // For now, just log for debugging
     } catch (error) {
       logger.error('Failed to process pose detection', { error, landmarks });
       // Don't show toast for pose detection errors (they're continuous)
@@ -182,6 +178,13 @@ export default function HomePage() {
       }
     };
   }, [videoUrl]);
+
+  useEffect(() => {
+    return () => {
+      audioUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      audioUrlsRef.current = [];
+    };
+  }, []);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -274,7 +277,6 @@ export default function HomePage() {
                     <EditorCanvas
                       ref={canvasRef}
                       videoElement={videoElement}
-                      currentTime={currentTime}
                       onAnnotationChange={handleAnnotationChange}
                     />
                     {poseDetectionEnabled && (

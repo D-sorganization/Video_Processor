@@ -31,14 +31,14 @@ export default function ProVideoProcessor() {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [totalFrames, setTotalFrames] = useState(0);
   const [poseDetectionEnabled, setPoseDetectionEnabled] = useState(false);
-  const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
+  const [fabricCanvas, _setFabricCanvas] = useState<fabric.Canvas | null>(null);
   const [gridEnabled, setGridEnabled] = useState(false);
   const [measurementEnabled, setMeasurementEnabled] = useState(false);
   const [showMetrics, setShowMetrics] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const canvasRef = useRef<EditorCanvasHandle>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const DEFAULT_FPS = 30;
 

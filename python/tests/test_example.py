@@ -20,8 +20,8 @@ class TestConstants:
 
     def test_mathematical_constants(self) -> None:
         """Test mathematical constants have correct values."""
-        assert pytest.approx(math.pi, rel=1e-15) == constants.PI
-        assert pytest.approx(2.718281828459045, rel=1e-15) == constants.E
+        assert math.pi == constants.PI
+        assert constants.E == 2.718281828459045
 
     def test_physical_constants_positive(self) -> None:
         """Test physical constants are positive."""
@@ -38,16 +38,16 @@ class TestConstants:
         speed_kph = speed_mps * constants.MPS_TO_KPH
         speed_mph = speed_mps * constants.MPS_TO_MPH
 
-        assert speed_kph == pytest.approx(36.0, rel=1e-10)
-        assert speed_mph == pytest.approx(22.3694, rel=1e-10)
+        assert speed_kph == 36.0
+        assert math.isclose(speed_mph, 22.3694)
 
         # Test angle conversions
         angle_deg = 180.0
         angle_rad = angle_deg * constants.DEG_TO_RAD
         angle_deg_back = angle_rad * constants.RAD_TO_DEG
 
-        assert angle_rad == pytest.approx(math.pi, rel=1e-10)
-        assert angle_deg_back == pytest.approx(180.0, rel=1e-10)
+        assert math.isclose(angle_rad, math.pi)
+        assert math.isclose(angle_deg_back, 180.0)
 
     def test_material_properties_positive(self) -> None:
         """Test material densities are positive."""

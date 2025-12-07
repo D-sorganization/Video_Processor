@@ -87,7 +87,6 @@ export default function ShotTracer({
         const angle = Math.atan2(lastPoint.y - secondLastPoint.y, lastPoint.x - secondLastPoint.x);
 
         const arrowLength = 15;
-        const arrowWidth = 8;
 
         ctx.fillStyle = color;
         ctx.beginPath();

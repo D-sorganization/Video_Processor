@@ -41,7 +41,7 @@ export default function SwingComparison({ video1, video2, onClose }: SwingCompar
     video2Ref.current = element;
   };
 
-  const handleTimeUpdate = (time: number) => {
+  const handleTimeUpdate = (_time: number) => {
     if (syncPlayback && video1Ref.current && video2Ref.current) {
       const video = video1Ref.current;
       const otherVideo = video2Ref.current;
