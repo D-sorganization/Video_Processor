@@ -5,7 +5,6 @@
  * All user-provided text should be sanitized before rendering or storage.
  *
  * For now, uses simple string operations.
- * TODO: Add DOMPurify when ready for production.
  *
  * @see PROFESSIONAL_CODE_REVIEW.md section "Security Assessment"
  */
@@ -90,7 +89,6 @@ export function sanitizeHTML(html: string): string {
   }
 
   // For now, just strip all HTML
-  // TODO: Use DOMPurify to allow safe HTML tags
   return sanitizeText(html);
 }
 
@@ -219,7 +217,6 @@ export function sanitizeColor(color: string): string {
   // Check if rgb/rgba
   if (trimmed.startsWith('rgb')) {
     // For now, just return as-is if it looks like rgb
-    // TODO: Parse and validate RGB values
     return trimmed;
   }
 

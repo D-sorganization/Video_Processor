@@ -33,7 +33,6 @@ export default function HomePage() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Note: config is not imported here to avoid client-side issues
-  // TODO: Move fps to client-side config or use from video metadata
   const DEFAULT_FPS = 30; // Could be from process.env.NEXT_PUBLIC_DEFAULT_VIDEO_FPS
 
   const { getCurrentFrame, getTotalFrames } = useVideoFrame({
@@ -118,9 +117,6 @@ export default function HomePage() {
       });
 
       toast.success('Audio commentary recorded successfully');
-
-      // TODO: Save to database when backend is ready
-      // await saveAudioTrack({ url: audioUrl, startTime, duration: audioBlob.size });
     } catch (error) {
       logger.error('Failed to process audio recording', { error, audioBlob, startTime });
       toast.error(getUserMessage(error));
@@ -165,9 +161,6 @@ export default function HomePage() {
         currentTime,
         currentFrame,
       });
-
-      // TODO: Save pose data to state or database when ready
-      // For now, just log for debugging
     } catch (error) {
       logger.error('Failed to process pose detection', { error, landmarks });
       // Don't show toast for pose detection errors (they're continuous)

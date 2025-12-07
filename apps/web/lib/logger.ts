@@ -6,7 +6,6 @@
  * Uses pino for high-performance logging in production.
  *
  * For now, uses console with structured formatting.
- * TODO: Add pino when ready for production.
  */
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
