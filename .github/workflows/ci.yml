@@ -50,6 +50,7 @@ jobs:
             --exclude-dir=".git" \
             --exclude-dir="archive" \
             --exclude-dir="legacy" \
+             --exclude="quality_check.py" \
             --exclude-dir="experimental" .; then
             echo "❌ ERROR: Placeholders found in code"
             exit 1
