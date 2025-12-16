@@ -1,74 +1,46 @@
-# Ruff configuration for aggressive code quality
+# ruff.toml
+# Configuration for the Ruff linter
+# Matches standards defined in ci-standard.yml
 
-target-version = "py313"
-line-length = 100
+# Target Python 3.11 (matches your CI environment)
+target-version = "py311"
+line-length = 88  # Matches Black standard (88 chars)
+
+# Exclude generated code and standard noise
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "venv",
+    ".env",
+    "node_modules",
+    "*.ipynb",  # Jupyter notebooks often fail standard linting
+]
 
 [lint]
-# Enable ALL rules then selectively disable
-select = ["ALL"]
-ignore = [
-    "D",      # Docstring checks (we check separately)
-    "COM812", # Missing trailing comma (conflicts with black)
-    "ISC001", # Single line implicit string concat
-]
+# Enable specific rule sets:
+# E = pycodestyle errors
+# F = Pyflakes (Logic errors)
+# W = pycodestyle warnings
+# I = isort (Import sorting)
+# B = flake8-bugbear (Catches likely bugs/traps)
+# UP = pyupgrade (Modernizes old Python syntax)
+select = ["E", "F", "W", "I", "B", "UP"]
 
-# Stricter than defaults
-fixable = ["ALL"]
-unfixable = []
+# Ignore:
+# D = pydocstyle (We let the 'Doc-Scribe' agent handle docstrings, so we don't lint them strictly here)
+ignore = ["D"]
 
-# Exclude legacy code
-exclude = [
-    "archive/",
-    "legacy/",
-    "experimental/",
-    "*/migrations/",
-    "*_pb2.py",
-]
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [lint.per-file-ignores]
-# Tests can be more relaxed
-"test_*.py" = [
-    "S101",   # Use of assert
-    "PLR2004", # Magic numbers allowed in tests
-]
-"**/tests/*.py" = [
-    "S101",
-    "PLR2004", 
-]
-"python/tests/test_logger_utils_mock.py" = [
-    "S101",
-    "PLR2004",
-    "PLC0415",
-]
-# MATLAB quality check script - utility script with acceptable complexity
-"tools/matlab_utilities/scripts/matlab_quality_check.py" = [
-    "C901",      # Complexity acceptable for utility script
-    "PLR0912",   # Too many branches acceptable for utility script
-    "PLR0915",   # Too many statements acceptable for utility script
-    "PLR0911",   # Too many return statements acceptable
-    "BLE001",    # Blind exception catching acceptable for file parsing
-    "S603",      # Subprocess call is safe (internal script)
-    "DTZ005",    # Timezone not needed for timestamps
-    "ANN204",    # __init__ return type not needed
-    "ICN003",    # Final from typing needed for proper type annotations
-]
+# Ignore "unused imports" in __init__.py files (common pattern)
+"__init__.py" = ["F401"]
+# Allow assertions in tests
+"tests/*" = ["S101"]
 
-[lint.mccabe]
-max-complexity = 10
-
-[lint.pylint]
-max-args = 5
-max-branches = 10
-max-returns = 3
-max-statements = 30
-
-[lint.flake8-quotes]
-inline-quotes = "double"
-multiline-quotes = "double"
-docstring-quotes = "double"
-
-[lint.flake8-import-conventions]
-banned-from = ["typing"]
-
-[lint.flake8-tidy-imports]
-banned-module-level-imports = ["numpy", "pandas"]  # Must import specific items
+[lint.isort]
+# Tells Ruff how to group your own code vs. libraries
+known-first-party = ["src", "games", "tools"]
